@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PenBridge</title>
+<style>
+  :root {
+    --bg: #f4f4f7;
+    --side: #ececf1;
+    --card: #ffffff;
+    --sunk: #f5f5f8;
+    --line: rgba(20, 20, 40, .08);
+    --line-2: rgba(20, 20, 40, .14);
+    --text: #17171f;
+    --muted: #63667a;
+    --faint: #9a9cad;
+    --accent: #5b45e6;
+    --accent-2: #7a63ff;
+    --accent-soft: rgba(91, 69, 230, .10);
+    --on-accent: #ffffff;
+    --ok: #12985a;
+    --ok-soft: rgba(18, 152, 90, .12);
+    --warn: #b86e00;
+    --warn-soft: rgba(196, 122, 0, .12);
+    --danger: #cf3f3f;
+    --danger-soft: rgba(207, 63, 63, .10);
+    --shadow: 0 1px 2px rgba(20, 20, 40, .04), 0 2px 10px rgba(20, 20, 40, .035);
+    --r: 12px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16161b;
+      --side: #1c1c22;
+      --card: #212128;
+      --sunk: #1a1a20;
+      --line: rgba(255, 255, 255, .07);
+      --line-2: rgba(255, 255, 255, .13);
+      --text: #ececf2;
+      --muted: #a0a2b2;
+      --faint: #6f7182;
+      --accent: #a08cff;
+      --accent-2: #b8a8ff;
+      --accent-soft: rgba(160, 140, 255, .14);
+      --on-accent: #17123a;
+      --ok: #3ccf88;
+      --ok-soft: rgba(60, 207, 136, .14);
+      --warn: #f0a83a;
+      --warn-soft: rgba(240, 168, 58, .14);
+      --danger: #ff7272;
+      --danger-soft: rgba(255, 114, 114, .12);
+      --shadow: none;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body {
+    font: 13.5px/1.5 "Segoe UI Variable Text", "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; user-select: none; overflow: hidden;
+  }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 12px; border: 4px solid transparent; background-clip: padding-box; }
+  svg { flex: none; }
+  .mono { font-family: "Cascadia Mono", Consolas, monospace; }
+  h1, h2, h3 { margin: 0; font-family: "Segoe UI Variable Display", "Segoe UI", "Malgun Gothic", sans-serif; }
+
+  /* ── 뼈대 ───────────────────────────── */
+  .app { display: grid; grid-template-columns: 216px minmax(0, 1fr); height: 100vh; }
+  aside {
+    background: var(--side); border-right: 1px solid var(--line); display: flex; flex-direction: column;
+    padding: 16px 10px 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 18px; }
+  .logo { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: #fff; background: linear-gradient(140deg, #9474ff, #4b37df); box-shadow: 0 2px 8px rgba(75, 55, 223, .3); }
+  .brand b { font: 600 15.5px/1.1 "Segoe UI Variable Display", "Segoe UI", sans-serif; display: block; }
+  .brand small { color: var(--muted); font-size: 11.5px; }
+  nav { display: flex; flex-direction: column; gap: 2px; }
+  nav button {
+    all: unset; display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 8px;
+    color: var(--muted); cursor: pointer; position: relative; font-weight: 500;
+  }
+  nav button:hover { background: var(--line); color: var(--text); }
+  nav button.on { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+  nav button.on::before { content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--accent); }
+  nav button.on svg { color: var(--accent); }
+  nav .count { margin-left: auto; font-size: 11px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 600; }
+  .side-foot { margin-top: auto; padding: 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+  .side-foot .t { font-weight: 600; font-size: 12.5px; }
+  .side-foot .s { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  main { overflow-y: auto; overflow-x: hidden; }
+  .page { display: none; padding: 26px 30px 36px; max-width: 980px; }
+  .page.on { display: block; animation: rise .18s ease-out; }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  .page-head h1 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .page-head p { margin: 4px 0 0; color: var(--muted); }
+
+  .grid { display: grid; gap: 14px; }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .span2 { grid-column: span 2; }
+  @media (max-width: 900px) { .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 16px 18px; min-width: 0; }
+  .card-t { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 12px; }
+  .card-t svg { color: var(--accent); }
+  .card-t .r { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 12.5px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12.5px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .grow { flex: 1; min-width: 0; }
+  .sep { height: 1px; background: var(--line); margin: 14px 0; }
+
+  /* ── 컨트롤 ─────────────────────────── */
+  button.b {
+    font: inherit; font-weight: 500; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    border: 1px solid var(--line-2); background: var(--card); color: var(--text);
+    padding: 6px 13px; border-radius: 8px; cursor: pointer; transition: background .12s, filter .12s;
+  }
+  button.b:hover { background: var(--sunk); }
+  button.b:active { transform: translateY(1px); }
+  button.b.pri { background: var(--accent); border-color: transparent; color: var(--on-accent); font-weight: 600; }
+  button.b.pri:hover { filter: brightness(1.07); }
+  button.b.ghost { border-color: transparent; background: transparent; color: var(--accent); padding: 4px 6px; }
+  button.b.ghost:hover { background: var(--accent-soft); }
+  button.b.danger { color: var(--danger); }
+  button.b.danger:hover { background: var(--danger-soft); }
+  button.b:disabled { opacity: .45; cursor: default; filter: none; transform: none; }
+
+  .switch { position: relative; width: 38px; height: 20px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .switch span { position: absolute; inset: 0; border-radius: 20px; border: 1.5px solid var(--faint); transition: background .15s, border-color .15s; cursor: pointer; }
+  .switch span::after { content: ""; position: absolute; width: 12px; height: 12px; left: 2.5px; top: 2.5px; border-radius: 50%; background: var(--muted); transition: transform .15s, background .15s, width .1s; }
+  .switch input:checked + span { background: var(--accent); border-color: var(--accent); }
+  .switch input:checked + span::after { transform: translateX(18px); background: var(--on-accent); }
+  .switch:active span::after { width: 15px; }
+  label.opt { display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 10px 0; }
+  label.opt + label.opt { border-top: 1px solid var(--line); }
+  .opt-text { flex: 1; min-width: 0; }
+  .opt-text small { display: block; color: var(--muted); font-size: 12px; }
+
+  select {
+    font: inherit; color: var(--text); background: var(--sunk); border: 1px solid var(--line-2); border-radius: 8px;
+    padding: 6px 30px 6px 10px; outline: none; appearance: none; width: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23889' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+  }
+  option { background: var(--card); color: var(--text); }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 99px; white-space: nowrap; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.acc { background: var(--accent-soft); color: var(--accent); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.mute { background: var(--sunk); color: var(--muted); border: 1px solid var(--line); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .dot.ok { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+  .dot.warn { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft); }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--accent); border-right-color: transparent; animation: spin .8s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg) } }
+
+  /* ── 설치 안내 막대 ─────────────────── */
+  .installbar { display: none; align-items: center; gap: 12px; margin: 16px 30px 0; max-width: 920px; padding: 10px 12px 10px 16px; border-radius: 10px; background: var(--accent-soft); border: 1px solid var(--accent-soft); }
+  .installbar.on { display: flex; }
+  .installbar svg { color: var(--accent); }
+
+  /* ── 홈 ────────────────────────────── */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 18px; align-items: center; padding: 20px 22px; }
+  .state { display: flex; align-items: center; gap: 16px; }
+  .orb { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--sunk); color: var(--faint); position: relative; flex: none; }
+  .orb.on { background: var(--ok-soft); color: var(--ok); }
+  .orb.on::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--ok); opacity: 0; animation: ping 2.6s ease-out infinite; }
+  .orb.wait::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--accent); animation: spin 1.5s linear infinite; }
+  @keyframes ping { 0% { transform: scale(.85); opacity: .5 } 80%, 100% { transform: scale(1.25); opacity: 0 } }
+  .state h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+  .state p { margin: 2px 0 0; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .chip { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--sunk); border: 1px solid var(--line); color: var(--muted); }
+  .chip b { color: var(--text); font-weight: 600; }
+  .gauge { background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .gauge .lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .gauge .lbl b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; border-radius: 8px; background: var(--line); margin-top: 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 8px; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .06s linear; }
+  .big { font: 600 24px/1.1 "Cascadia Mono", Consolas, monospace; letter-spacing: .04em; }
+  .pin { color: var(--accent); letter-spacing: .18em; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: baseline; }
+  .kv dt { color: var(--muted); font-size: 12.5px; }
+  .kv dd { margin: 0; }
+  .link-card { cursor: pointer; transition: border-color .12s, transform .12s; }
+  .link-card:hover { border-color: var(--line-2); }
+  .tile-ic { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); flex: none; }
+
+  /* ── 기기 ──────────────────────────── */
+  .dev { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--sunk); }
+  .dev + .dev { margin-top: 8px; }
+  .dev-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dev-meta { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12.5px; margin-top: 2px; flex-wrap: wrap; }
+  .empty { text-align: center; padding: 28px 16px; border: 1.5px dashed var(--line-2); border-radius: 10px; color: var(--muted); }
+  .empty b { display: block; color: var(--text); font-size: 14.5px; margin: 8px 0 2px; }
+  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+  ol.steps li { counter-increment: s; display: flex; gap: 10px; padding: 6px 0; font-size: 12.5px; color: var(--muted); }
+  ol.steps li::before { content: counter(s); flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 11px; display: grid; place-items: center; margin-top: 1px; }
+  ol.steps b { color: var(--text); font-weight: 600; }
+
+  /* ── 기기 추가 ─────────────────────── */
+  .share { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 20px; align-items: center; }
+  .qr { width: 196px; height: 196px; border-radius: 14px; background: #fff; padding: 12px; border: 1px solid var(--line); display: grid; place-items: center; }
+  .qr svg { width: 100%; height: 100%; }
+  .qr.off { background: var(--sunk); color: var(--faint); font-size: 12.5px; text-align: center; padding: 20px; }
+  .url { font: 600 19px/1.3 "Cascadia Mono", Consolas, monospace; color: var(--accent); word-break: break-all; user-select: text; }
+  .dl { display: flex; align-items: center; gap: 14px; padding: 13px 0; }
+  .dl + .dl { border-top: 1px solid var(--line); }
+  .dl .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+
+  /* ── 펜 설정 ───────────────────────── */
+  .monitors { height: 160px; border-radius: 10px; background: var(--sunk); border: 1px solid var(--line); margin-bottom: 12px; display: block; width: 100%; }
+  .monitors g { cursor: pointer; }
+  .monitors rect { fill: var(--card); stroke: var(--line-2); stroke-width: 1.5; transition: fill .12s, stroke .12s; vector-effect: non-scaling-stroke; }
+  .monitors g:hover rect { stroke: var(--accent); }
+  .monitors g.on rect, .monitors.all rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  .monitors text { fill: var(--muted); font-size: 12px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+  .monitors text.n { fill: var(--text); font-size: 16px; font-weight: 600; }
+  .monitors g.on text, .monitors.all text { fill: var(--accent); }
+  .seg { display: inline-flex; background: var(--sunk); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg button { white-space: nowrap; all: unset; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12.5px; color: var(--muted); }
+  .seg button.on { background: var(--card); color: var(--text); box-shadow: var(--shadow); font-weight: 600; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; margin: 8px 0 2px; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: linear-gradient(to right, var(--accent) var(--p, 50%), var(--line-2) var(--p, 50%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--card); border: 2px solid var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: pointer; }
+  .scale { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--faint); }
+  .curve { width: 100%; height: 170px; display: block; margin-top: 12px; border-radius: 10px; background: var(--sunk); border: 1px solid var(--line); }
+  .curve .grid-l { stroke: var(--line); }
+  .curve .lin { stroke: var(--faint); stroke-dasharray: 3 4; opacity: .7; }
+  .curve .path { stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .curve .fill { fill: var(--accent-soft); }
+  .curve .dotp { fill: var(--ok); transition: opacity .15s; }
+
+  /* ── 단축키 ─────────────────────────── */
+  #bindings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 22px; }
+  .krow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .krow .lbl { flex: 1; min-width: 0; }
+  .krow .lbl small { display: block; color: var(--muted); font-size: 12px; }
+  .kbtn { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; padding: 3px; border-radius: 8px; border: 1px solid transparent; justify-content: flex-end; flex: none; }
+  .kbtn:hover { border-color: var(--line-2); background: var(--sunk); }
+  .kbtn.cap { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
+  kbd { font: 600 12px/1 "Segoe UI", sans-serif; padding: 5px 8px; border-radius: 6px; background: var(--card); border: 1px solid var(--line-2); border-bottom-width: 2px; color: var(--text); min-width: 24px; text-align: center; }
+  .mod-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 4px; }
+  .gest { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
+  .gest + .gest { border-top: 1px solid var(--line); }
+  .gest .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; font-weight: 700; font-size: 12px; }
+  .gest b { display: block; font-weight: 600; }
+  .gest span { color: var(--muted); font-size: 12.5px; }
+
+  /* ── 업데이트 ──────────────────────── */
+  .vers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .ver { background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; }
+  .ver small { display: block; color: var(--muted); font-size: 12px; }
+  .ver b { font: 600 18px/1.3 "Segoe UI Variable Display", "Segoe UI", sans-serif; }
+  .progress { display: none; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 9px; background: var(--accent-soft); }
+  .progress.on { display: flex; }
+
+  /* ── 알림 / 대화상자 ───────────────── */
+  .toasts { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 20; max-width: 380px; }
+  .toast { background: var(--card); border: 1px solid var(--line-2); border-left: 3px solid var(--accent); border-radius: 10px; padding: 10px 14px; box-shadow: 0 8px 28px rgba(0,0,0,.16); font-size: 13px; animation: tin .2s ease-out; }
+  .toast.warn { border-left-color: var(--warn); }
+  .toast.out { animation: tout .25s ease-in forwards; }
+  @keyframes tin { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes tout { to { opacity: 0; transform: translateY(8px); } }
+  .scrim { position: fixed; inset: 0; background: rgba(10, 10, 20, .4); display: none; place-items: center; z-index: 30; padding: 20px; }
+  .scrim.on { display: grid; animation: fade .15s ease-out; }
+  @keyframes fade { from { opacity: 0 } }
+  .dialog { background: var(--card); border: 1px solid var(--line-2); border-radius: 14px; padding: 22px; width: 100%; max-width: 420px; box-shadow: 0 24px 70px rgba(0,0,0,.3); }
+  .dialog h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .dialog p { margin: 0 0 4px; color: var(--muted); word-break: break-all; }
+  .dialog .acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══════════ 사이드바 ═══════════ -->
+<aside>
+  <div class="brand">
+    <div class="logo"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="12.5" height="17" rx="2.3"/><path d="M8.6 17.3h2.3"/><path d="M20.6 5.2l-7 7"/><path d="M13.6 12.2l-1.6 3 3-1.6z"/></svg></div>
+    <div><b>PenBridge</b><small id="sideVer">v–</small></div>
+  </div>
+  <nav id="nav">
+    <button data-page="home" class="on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>홈</button>
+    <button data-page="devices"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M11 18h2"/></svg>태블릿<span class="count" id="navCount" style="display:none">0</span></button>
+    <button data-page="share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3.5"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>기기 추가</button>
+    <button data-page="pen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1.5 14h5"/><path d="M9.5 8h5"/><path d="M17.5 16h5"/></svg>펜 · 화면</button>
+    <button data-page="keys"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 15.5h6"/></svg>단축키</button>
+    <button data-page="update"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>업데이트<span class="count" id="navUpd" style="display:none">1</span></button>
+    <button data-page="settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>설정</button>
+  </nav>
+  <div class="side-foot">
+    <span class="dot" id="sideDot"></span>
+    <div class="grow"><div class="t" id="sideState">대기 중</div><div class="s" id="sideSub">태블릿을 기다려요</div></div>
+  </div>
+</aside>
+
+<!-- ═══════════ 본문 ═══════════ -->
+<main id="main">
+  <div class="installbar" id="installBar">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    <div class="grow"><b id="instTitle">이 PC에 아직 설치되지 않았어요</b> <span class="muted small" id="instSub">시작 메뉴 바로가기와 방화벽 허용까지 한 번에 설정해요.</span></div>
+    <button class="b pri" id="instOpen">설치하기</button>
+  </div>
+
+  <!-- 홈 -->
+  <section class="page on" id="p-home">
+    <div class="page-head"><div><h1>홈</h1><p>지금 연결 상태와 연결에 필요한 정보예요.</p></div></div>
+    <div class="grid">
+      <div class="card hero">
+        <div>
+          <div class="state">
+            <div class="orb wait" id="orb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M11 18h2"/></svg></div>
+            <div class="grow"><h2 id="stTitle">태블릿을 기다리는 중</h2><p id="stSub">태블릿 앱에서 USB 또는 Wi‑Fi로 연결해 주세요.</p></div>
+          </div>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div class="gauge">
+          <div class="lbl"><span>펜 누르는 힘</span><b id="pVal">–</b></div>
+          <div class="bar"><i id="pBar"></i></div>
+          <div class="lbl" style="margin-top:10px"><span>입력</span><b id="ppsVal">–</b></div>
+        </div>
+      </div>
+      <div class="grid g3">
+        <div class="card">
+          <div class="card-t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg>Wi‑Fi로 연결</div>
+          <dl class="kv"><dt>이 PC 주소</dt><dd class="mono" id="ip">–</dd><dt>PIN</dt><dd><span class="big pin" id="pin">0000</span></dd></dl>
+          <div class="row" style="margin-top:12px"><span class="muted small grow">태블릿 앱 → Wi‑Fi에서 찾기</span><button class="b ghost" id="newPin">새 PIN</button></div>
+        </div>
+        <div class="card link-card" data-go="devices">
+          <div class="card-t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="7" r="1"/><circle cx="4" cy="20" r="1"/><path d="M4.7 19.3 19 5"/><path d="m21 3-3 1 2 2Z"/><path d="M9.26 7.68 5 12l2 5"/><path d="m10 14 5 2 3.5-3.5"/></svg>USB 태블릿<span class="r">관리 ›</span></div>
+          <div class="big" id="homeDevCount" style="font-family:inherit">0대</div>
+          <div class="muted small" id="homeDevSub" style="margin-top:6px">USB 디버깅을 켠 태블릿을 연결하면 보여요</div>
+        </div>
+        <div class="card link-card" data-go="share">
+          <div class="card-t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>다른 기기 추가<span class="r">열기 ›</span></div>
+          <div style="font-weight:600">QR로 앱 내려받기</div>
+          <div class="muted small" style="margin-top:4px">새 태블릿이나 PC에서 QR을 찍거나 주소를 열면 설치 파일을 받을 수 있어요.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 태블릿 -->
+  <section class="page" id="p-devices">
+    <div class="page-head"><div><h1>태블릿</h1><p>USB나 무선 디버깅으로 연결된 태블릿에 앱을 설치하고 관리해요.</p></div><span class="muted small" id="adbState"></span></div>
+    <div class="grid" style="grid-template-columns: minmax(0, 1fr) 300px">
+      <div class="card">
+        <div class="card-t">연결된 기기</div>
+        <div id="devices"></div>
+        <div class="empty" id="devEmpty">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M11 18h2"/></svg>
+          <b>연결된 태블릿이 없어요</b>
+          케이블을 꽂고 태블릿에서 USB 디버깅을 허용해 주세요.
+        </div>
+        <div id="adbWrap" style="display:none; margin-top:12px"><button class="b pri" id="adbBtn">태블릿 연결 도구(adb) 받기</button></div>
+        <div class="sep"></div>
+        <label class="opt" style="padding:0">
+          <span class="opt-text">태블릿을 꽂으면 자동으로 연결 준비<small>태블릿 앱의 ‘USB로 연결’이 바로 동작하게 해요</small></span>
+          <span class="switch"><input type="checkbox" data-key="usbAuto"><span></span></span>
+        </label>
+      </div>
+      <div class="card">
+        <div class="card-t">처음 연결할 때</div>
+        <ol class="steps">
+          <li><span>설정 → 태블릿 정보에서 <b>빌드번호</b>를 7번 눌러요</span></li>
+          <li><span>개발자 옵션에서 <b>USB 디버깅</b>을 켜요</span></li>
+          <li><span>케이블을 꽂고 태블릿의 <b>허용</b>을 눌러요 (항상 허용 추천)</span></li>
+          <li><span>목록에 나타나면 <b>태블릿에 설치</b>를 눌러요</span></li>
+        </ol>
+        <div class="muted small" style="margin-top:8px">안 보이면 충전 전용이 아닌 <b style="color:var(--text)">데이터 케이블</b>인지, 제조사 USB 드라이버가 필요한지 확인해 주세요.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 기기 추가 -->
+  <section class="page" id="p-share">
+    <div class="page-head"><div><h1>기기 추가</h1><p>새 태블릿이나 다른 PC에 PenBridge를 설치해요.</p></div></div>
+    <div class="grid">
+      <div class="card">
+        <div class="share">
+          <div class="qr off" id="qr">주소를 준비하는 중…</div>
+          <div>
+            <div class="muted small">같은 Wi‑Fi의 새 기기에서 브라우저로 여세요</div>
+            <div class="url" id="shareUrl">–</div>
+            <div class="muted small" style="margin-top:8px">안드로이드는 카메라로 QR을 찍어도 돼요. 받은 파일을 누르고 ‘설치 허용’을 켜면 설치돼요.</div>
+            <div class="row" style="margin-top:14px; flex-wrap:wrap">
+              <button class="b" id="copyUrl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>주소 복사</button>
+              <span class="badge mute" id="shareState">꺼짐</span>
+              <span class="muted small" id="shareAlt"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-t">설치 파일</div>
+        <div class="dl">
+          <div class="tile-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M11 18h2"/></svg></div>
+          <div class="grow"><b>안드로이드 태블릿 앱</b><div class="muted small" id="apkInfo">–</div></div>
+          <div class="acts">
+            <button class="b pri" id="usbInstall"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>USB로 바로 설치</button>
+            <button class="b" data-save="android">이 PC에 저장</button>
+          </div>
+        </div>
+        <div class="dl">
+          <div class="tile-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
+          <div class="grow"><b>Windows PC 프로그램</b><div class="muted small" id="exeInfo">–</div></div>
+          <div class="acts"><button class="b" data-save="windows">이 PC에 저장</button></div>
+        </div>
+        <div class="dl">
+          <div class="tile-ic" style="background:var(--sunk);color:var(--faint)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h16"/><rect x="5" y="5" width="14" height="10" rx="1.5"/><path d="M2 21h20"/></svg></div>
+          <div class="grow"><b class="muted">Mac · iPad</b><div class="muted small">아직 지원하지 않아요</div></div>
+          <div class="acts"><span class="badge mute">준비 중</span></div>
+        </div>
+        <div class="muted small" style="margin-top:6px">‘이 PC에 저장’은 다운로드 폴더에 저장해요. USB 메모리로 옮길 때 쓰면 돼요.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 펜 · 화면 -->
+  <section class="page" id="p-pen">
+    <div class="page-head"><div><h1>펜 · 화면</h1><p>태블릿이 어느 화면에 대응할지와 필압 느낌을 정해요.</p></div></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-t">그리기 영역<span class="r"><button class="b ghost" id="allMon">모든 모니터</button></span></div>
+        <svg class="monitors" id="monitors" preserveAspectRatio="xMidYMid meet"></svg>
+        <label class="opt" style="padding:4px 0 0">
+          <span class="opt-text">화면 비율 유지<small>태블릿에 같은 비율의 영역을 표시해 원이 찌그러지지 않아요</small></span>
+          <span class="switch"><input type="checkbox" data-key="keepAspect"><span></span></span>
+        </label>
+      </div>
+      <div class="card">
+        <div class="card-t">필압 곡선</div>
+        <div class="seg" id="presets"><button data-g="0.6">부드럽게</button><button data-g="1">보통</button><button data-g="1.6">단단하게</button></div>
+        <input type="range" id="curve" min="0" max="20" step="1" value="10" style="margin-top:12px">
+        <div class="scale"><span>약하게 눌러도 진하게</span><span>세게 눌러야 진하게</span></div>
+        <svg class="curve" id="curveSvg" viewBox="0 0 300 170" preserveAspectRatio="none">
+          <line class="grid-l" x1="0" y1="85" x2="300" y2="85"/><line class="grid-l" x1="150" y1="0" x2="150" y2="170"/>
+          <line class="lin" x1="0" y1="170" x2="300" y2="0"/>
+          <path class="fill" id="curveFill"/><path class="path" id="curvePath"/>
+          <circle class="dotp" id="curveDot" r="5" opacity="0"/>
+        </svg>
+        <div class="muted small" style="margin-top:8px">태블릿에 그려 보면 초록 점이 지금 누르는 세기를 보여 줘요.</div>
+      </div>
+      <div class="card span2">
+        <div class="card-t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="13" height="9" rx="1.5"/><rect x="13" y="9" width="9" height="12" rx="1.8"/><path d="M5 17h5"/></svg>액정 타블렛 모드<span class="r"><span class="badge mute" id="mirState">꺼짐</span></span></div>
+        <div class="row" style="align-items:flex-start; gap:24px; flex-wrap:wrap">
+          <div class="grow" style="min-width:260px">
+            <div class="muted small">그리기 영역 모니터의 화면을 태블릿에 띄워서, 화면을 보면서 바로 그릴 수 있어요. 태블릿 툴바의 <b style="color:var(--text)">화면 보기</b> 버튼으로 켜고 꺼요.</div>
+            <label class="opt" style="padding-bottom:0"><span class="opt-text">이 PC에서 화면 보내기 허용</span><span class="switch"><input type="checkbox" data-key="mirrorEnabled"><span></span></span></label>
+          </div>
+          <div>
+            <div class="muted small" style="margin-bottom:6px">화질</div>
+            <div class="seg" id="mirQ"><button data-q="0">부드럽게</button><button data-q="1">균형</button><button data-q="2">선명하게</button></div>
+            <div class="muted small" style="margin-top:6px">USB 연결일 때 가장 매끄러워요</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 단축키 -->
+  <section class="page" id="p-keys">
+    <div class="page-head">
+      <div><h1>단축키</h1><p>태블릿 툴바 버튼과 손가락 제스처가 보낼 키예요.</p></div>
+    </div>
+    <div class="row" style="margin:-4px 0 16px; flex-wrap:wrap"><span class="muted small">그림 프로그램</span><div class="seg" id="profiles"></div></div>
+    <div class="grid" style="grid-template-columns: minmax(0, 1fr) 260px">
+      <div class="card">
+        <div class="card-t">버튼별 키<span class="r">키를 눌러 바꿀 수 있어요</span></div>
+        <div id="bindings"></div>
+        <div class="sep"></div>
+        <div class="row">
+          <span class="grow">손가락으로 확대·축소할 때 누를 키<small class="muted" style="display:block;font-size:12px">이 키 + 마우스 휠로 확대해요</small></span>
+          <select id="zoomWheel" style="width:110px"><option value="Ctrl">Ctrl</option><option value="Alt">Alt</option><option value="Shift">Shift</option></select>
+        </div>
+        <div class="row" style="margin-top:14px"><span class="grow"></span><button class="b" id="resetKeys">이 프리셋 기본값으로</button></div>
+      </div>
+      <div class="card">
+        <div class="card-t">손가락 제스처</div>
+        <div class="gest"><div class="ic">2탭</div><div><b>실행 취소</b><span>두 손가락으로 톡</span></div></div>
+        <div class="gest"><div class="ic">3탭</div><div><b>다시 실행</b><span>세 손가락으로 톡</span></div></div>
+        <div class="gest"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg></div><div><b>캔버스 이동</b><span>두 손가락으로 끌기</span></div></div>
+        <div class="gest"><div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></div><div><b>확대 · 축소</b><span>두 손가락 벌리기/모으기</span></div></div>
+        <div class="muted small" style="margin-top:10px">펜이 화면 가까이 있거나 손바닥이 닿으면 제스처는 무시돼요. 그림 프로그램을 관리자 권한으로 실행하면 키가 전달되지 않아요.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 업데이트 -->
+  <section class="page" id="p-update">
+    <div class="page-head"><div><h1>업데이트</h1><p>노트북 앱과 태블릿 앱을 최신으로 유지해요.</p></div><button class="b pri" id="checkOnline">지금 확인</button></div>
+    <div class="grid">
+      <div class="card">
+        <div class="vers">
+          <div class="ver"><small>노트북 앱</small><b id="vPc">–</b></div>
+          <div class="ver"><small>태블릿 앱 (보관 중)</small><b id="vTab">–</b></div>
+          <div class="ver"><small>연결된 태블릿</small><b id="vCon">–</b></div>
+        </div>
+        <div class="progress" id="updProg"><span class="spin"></span><span id="updText"></span></div>
+      </div>
+      <div class="card">
+        <label class="opt" id="onlineOpt">
+          <span class="opt-text">인터넷으로 새 버전 확인<small id="onlineSub">시작할 때와 6시간마다 확인해요</small></span>
+          <span class="switch"><input type="checkbox" data-key="checkOnline"><span></span></span>
+        </label>
+        <label class="opt">
+          <span class="opt-text">태블릿 앱 자동 업데이트<small>태블릿이 연결되면 새 버전을 보내 설치해요</small></span>
+          <span class="switch"><input type="checkbox" data-key="tabletAutoUpdate"><span></span></span>
+        </label>
+        <label class="opt">
+          <span class="opt-text">노트북 앱은 묻지 않고 바로 적용<small>꺼져 있으면 새 버전을 찾았을 때 먼저 물어봐요</small></span>
+          <span class="switch"><input type="checkbox" data-key="autoApplyPc"><span></span></span>
+        </label>
+        <div class="sep"></div>
+        <div class="row"><span class="muted small grow">PenBridge로 시작하는 zip · exe · apk를 프로그램 폴더나 다운로드 폴더에 넣어도 자동으로 찾아요.</span><button class="b" id="pickUpdate">파일 선택…</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 설정 -->
+  <section class="page" id="p-settings">
+    <div class="page-head"><div><h1>설정</h1></div></div>
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-t">일반</div>
+        <label class="opt">
+          <span class="opt-text">Windows 시작 시 자동 실행<small>트레이에서 조용히 시작해요</small></span>
+          <span class="switch"><input type="checkbox" data-key="startup"><span></span></span>
+        </label>
+        <div class="opt" style="display:flex;align-items:center;gap:14px;border-top:1px solid var(--line);padding:10px 0">
+          <span class="opt-text">Windows 방화벽<small id="fwSub">Wi‑Fi 연결과 기기 추가에 필요해요</small></span>
+          <span class="badge ok" id="fwOk">허용됨</span>
+          <button class="b" id="fwBtn">허용하기</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-t">프로그램</div>
+        <div class="row" style="padding:6px 0"><span class="grow">설치 위치</span><span class="muted small" id="instState">–</span></div>
+        <div class="sep"></div>
+        <div class="row" style="flex-wrap:wrap">
+          <button class="b" id="saveCopy">다른 PC용 설치 파일 저장…</button>
+          <button class="b danger" id="uninstBtn">제거</button>
+          <span class="grow"></span>
+          <button class="b danger" id="exitBtn">PenBridge 종료</button>
+        </div>
+        <div class="muted small" style="margin-top:10px">창을 닫아도 트레이에서 계속 실행돼요.</div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- 설치 -->
+<div class="scrim" id="instDlg">
+  <div class="dialog">
+    <h3>이 PC에 설치</h3>
+    <p>설치 폴더로 복사하고 시작 메뉴에 등록해요. 설치 후 PenBridge가 다시 켜져요.</p>
+    <label class="opt"><span class="opt-text">바탕화면에 바로가기</span><span class="switch"><input type="checkbox" id="instDesktop" checked><span></span></span></label>
+    <label class="opt"><span class="opt-text">방화벽 허용<small>관리자 확인 창이 한 번 떠요</small></span><span class="switch"><input type="checkbox" id="instFw" checked><span></span></span></label>
+    <div class="acts"><button class="b" data-close="instDlg">취소</button><button class="b pri" id="instGo">설치</button></div>
+  </div>
+</div>
+
+<!-- 업데이트 확인 -->
+<div class="scrim" id="updDlg">
+  <div class="dialog">
+    <h3 id="dlgTitle">새 버전이 있어요</h3>
+    <p id="dlgBody"></p>
+    <p class="small" id="dlgFrom"></p>
+    <div class="acts"><button class="b" id="dlgNo">나중에</button><button class="b pri" id="dlgYes">업데이트</button></div>
+  </div>
+</div>
+
+<!--QRLIB-->
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const host = window.chrome && window.chrome.webview;
+  const send = (msg) => host ? host.postMessage(msg) : console.log('send', msg);
+  const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const setText = (id, t) => { const el = $(id); if (el && el.textContent !== t) el.textContent = t; };
+  const show = (id, on, disp = 'block') => { const el = $(id); if (el) el.style.display = on ? disp : 'none'; };
+  const setCheck = (key, v) => { const el = document.querySelector(`input[data-key="${key}"]`); if (el && el.checked !== !!v) el.checked = !!v; };
+
+  // ── 페이지 이동 ──
+  let page = 'home';
+  function go(p) {
+    page = p;
+    document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('on', b.dataset.page === p));
+    document.querySelectorAll('.page').forEach((s) => s.classList.toggle('on', s.id === 'p-' + p));
+    $('main').scrollTop = 0;
+    send({ cmd: 'page', page: p });
+  }
+  document.querySelectorAll('nav button').forEach((b) => b.onclick = () => go(b.dataset.page));
+  document.querySelectorAll('[data-go]').forEach((c) => c.onclick = () => go(c.dataset.go));
+
+  // ── 명령 ──
+  document.querySelectorAll('input[type=checkbox][data-key]').forEach((el) =>
+    el.addEventListener('change', () => send({ cmd: 'set', key: el.dataset.key, value: el.checked })));
+  $('newPin').onclick = () => send({ cmd: 'newPin' });
+  $('adbBtn').onclick = () => send({ cmd: 'downloadAdb' });
+  $('pickUpdate').onclick = () => send({ cmd: 'pickUpdate' });
+  $('checkOnline').onclick = () => send({ cmd: 'checkOnline' });
+  $('saveCopy').onclick = () => send({ cmd: 'saveCopy' });
+  $('uninstBtn').onclick = () => send({ cmd: 'uninstall' });
+  $('exitBtn').onclick = () => send({ cmd: 'exit' });
+  $('fwBtn').onclick = () => send({ cmd: 'fixFirewall' });
+  $('copyUrl').onclick = () => send({ cmd: 'copyUrl' });
+  $('usbInstall').onclick = () => send({ cmd: 'usbInstallAll' });
+  document.querySelectorAll('[data-save]').forEach((b) => b.onclick = () => send({ cmd: 'saveInstaller', which: b.dataset.save }));
+  $('instOpen').onclick = () => $('instDlg').classList.add('on');
+  document.querySelectorAll('[data-close]').forEach((b) => b.onclick = () => $(b.dataset.close).classList.remove('on'));
+  $('instGo').onclick = () => {
+    $('instGo').disabled = true; $('instGo').textContent = '설치 중…';
+    send({ cmd: 'installSelf', desktop: $('instDesktop').checked, firewall: $('instFw').checked });
+  };
+  $('dlgYes').onclick = () => { send({ cmd: 'applyUpdate' }); $('updDlg').classList.remove('on'); };
+  $('dlgNo').onclick = () => { send({ cmd: 'dismissUpdate' }); $('updDlg').classList.remove('on'); };
+  document.querySelectorAll('#mirQ button').forEach((b) => b.onclick = () => send({ cmd: 'set', key: 'mirrorQuality', value: Number(b.dataset.q) }));
+  $('profiles').addEventListener('click', (e) => { const b = e.target.closest('button[data-p]'); if (b) send({ cmd: 'set', key: 'shortcutProfile', value: b.dataset.p }); });
+  $('zoomWheel').addEventListener('change', (e) => send({ cmd: 'set', key: 'zoomWheel', value: e.target.value }));
+  $('resetKeys').onclick = () => send({ cmd: 'resetKeys' });
+
+  // ── 단축키 입력 받기 ──
+  let capturing = null;
+  const codeName = (c) => {
+    if (/^Key[A-Z]$/.test(c)) return c.slice(3);
+    if (/^Digit\d$/.test(c)) return c.slice(5);
+    if (/^Numpad\d$/.test(c)) return c.slice(6);
+    if (/^F\d{1,2}$/.test(c)) return c;
+    return ({ BracketLeft: '[', BracketRight: ']', Minus: '-', Equal: '=', Comma: ',', Period: '.', Slash: '/', Semicolon: ';',
+      Quote: "'", Backquote: '`', Backslash: '\\', Space: 'Space', Tab: 'Tab', Enter: 'Enter', Backspace: 'Backspace', Delete: 'Delete',
+      Insert: 'Insert', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown',
+      ArrowLeft: 'Left', ArrowRight: 'Right', ArrowUp: 'Up', ArrowDown: 'Down' })[c] || null;
+  };
+  $('bindings').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-k]');
+    if (!b) return;
+    capturing = b.dataset.k;
+    renderBindings(state, true);
+  });
+  window.addEventListener('keydown', (e) => {
+    if (!capturing) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.code === 'Escape') { capturing = null; renderBindings(state, true); return; }
+    const main = codeName(e.code);
+    if (!main) return;                       // Ctrl·Shift만 누른 상태 → 다음 키를 기다림
+    const parts = [];
+    if (e.ctrlKey) parts.push('Ctrl');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.altKey) parts.push('Alt');
+    parts.push(main);
+    send({ cmd: 'setKey', id: capturing, keys: parts.join('+') });
+    capturing = null;
+  }, true);
+  const kbd = (spec) => (spec || '').replace(/\+\+$/, '+=').split('+').filter(Boolean).map((k) => `<kbd>${esc(k)}</kbd>`).join('');
+  function renderBindings(s, force) {
+    const html = (s.bindings || []).map((b) => `<div class="krow"><div class="lbl">${esc(b.label)}<small>${esc(b.hint)}</small></div>` +
+      (capturing === b.id
+        ? `<button class="kbtn cap" data-k="${b.id}">키를 누르세요 · Esc 취소</button>`
+        : `<button class="kbtn" data-k="${b.id}" title="눌러서 바꾸기">${kbd(b.keys) || '<span class="muted small">없음</span>'}${b.custom ? '<span class="mod-dot" title="바꾼 키"></span>' : ''}</button>`) +
+      '</div>').join('');
+    const box = $('bindings');
+    if (force || box.dataset.h !== html) { box.innerHTML = html; box.dataset.h = html; }
+  }
+
+  $('allMon').onclick = () => send({ cmd: 'set', key: 'monitor', value: -1 });
+  $('devices').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-act]');
+    if (b) send({ cmd: b.dataset.act === 'install' ? 'installApp' : 'openApp', serial: b.dataset.serial });
+  });
+  $('monitors').addEventListener('click', (e) => {
+    const m = e.target.closest('g[data-i]');
+    if (m) send({ cmd: 'set', key: 'monitor', value: Number(m.dataset.i) });
+  });
+
+  // ── 필압 곡선 ──
+  const sliderToGamma = (v) => Math.pow(2.5, (v - 10) / 10);
+  const gammaToSlider = (g) => Math.max(0, Math.min(20, Math.round(10 + 10 * Math.log(g) / Math.log(2.5))));
+  const curve = $('curve');
+  let editing = false;
+  function drawCurve(pressure) {
+    const g = sliderToGamma(Number(curve.value));
+    curve.style.setProperty('--p', (curve.value / 20 * 100) + '%');
+    let d = '';
+    for (let i = 0; i <= 60; i++) {
+      const x = i / 60, y = Math.pow(x, g);
+      d += (i ? 'L' : 'M') + (x * 300).toFixed(1) + ' ' + (168 - y * 164).toFixed(1);
+    }
+    $('curvePath').setAttribute('d', d);
+    $('curveFill').setAttribute('d', d + ' L300 170 L0 170 Z');
+    const dot = $('curveDot');
+    if (pressure > 0) {
+      dot.setAttribute('cx', pressure * 300);
+      dot.setAttribute('cy', 168 - Math.pow(pressure, g) * 164);
+      dot.setAttribute('opacity', 1);
+    } else dot.setAttribute('opacity', 0);
+    document.querySelectorAll('#presets button').forEach((b) =>
+      b.classList.toggle('on', gammaToSlider(Number(b.dataset.g)) === Number(curve.value)));
+  }
+  const commitGamma = (g) => { send({ cmd: 'set', key: 'gamma', value: g }); setTimeout(() => editing = false, 400); };
+  curve.addEventListener('input', () => { editing = true; drawCurve(state.pressure || 0); });
+  curve.addEventListener('change', () => commitGamma(sliderToGamma(Number(curve.value))));
+  document.querySelectorAll('#presets button').forEach((b) => b.onclick = () => {
+    editing = true; curve.value = gammaToSlider(Number(b.dataset.g)); drawCurve(0); commitGamma(Number(b.dataset.g));
+  });
+
+  // ── 알림 ──
+  let lastMsg = null;
+  function toast(text, warn) {
+    const t = document.createElement('div');
+    t.className = 'toast' + (warn ? ' warn' : '');
+    t.textContent = text;
+    $('toasts').appendChild(t);
+    setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 6000);
+    while ($('toasts').children.length > 3) $('toasts').firstChild.remove();
+  }
+
+  // ── QR ──
+  let qrFor = null;
+  function drawQr(url) {
+    if (qrFor === url) return;
+    qrFor = url;
+    const box = $('qr');
+    if (!url || typeof qrcode !== 'function') { box.className = 'qr off'; box.textContent = url ? 'QR을 표시할 수 없어요' : '주소를 준비하는 중…'; return; }
+    const q = qrcode(0, 'M'); q.addData(url); q.make();
+    box.className = 'qr';
+    box.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  }
+
+  const tabletIcon = '<div class="tile-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><path d="M11 18h2"/></svg></div>';
+
+  let state = {};
+  let shownPending = null;
+
+  function render(s) {
+    state = s;
+    const c = s.connected;
+
+    // 사이드바
+    setText('sideVer', 'v' + s.appVersion);
+    $('sideDot').className = 'dot ' + (c ? 'ok' : '');
+    setText('sideState', c ? '연결됨' : '대기 중');
+    setText('sideSub', c ? `${s.transport} · ${s.remote}` : '태블릿을 기다려요');
+    const devs = s.devices || [];
+    show('navCount', devs.length > 0, 'grid'); setText('navCount', String(devs.length));
+    show('navUpd', !!s.pending || !!s.updateStatus, 'grid'); setText('navUpd', '1');
+
+    // 설치 막대
+    $('installBar').classList.toggle('on', !s.installed);
+    if (!s.installed) setText('instTitle', s.installedVersion
+      ? `설치된 PenBridge v${s.installedVersion}보다 새 버전이에요` : '이 PC에 아직 설치되지 않았어요');
+
+    // 홈
+    $('orb').className = 'orb ' + (c ? 'on' : 'wait');
+    setText('stTitle', c ? '태블릿 연결됨' : '태블릿을 기다리는 중');
+    setText('stSub', c ? `${s.transport}로 연결됐어요. 펜으로 그리면 바로 입력돼요.` : '태블릿 앱에서 USB 또는 Wi‑Fi로 연결해 주세요.');
+    const chips = c ? [['연결', s.transport], ['기기', s.remote], ['태블릿 앱', 'v' + s.tabletVersion]] : [];
+    const ch = chips.map(([k, v]) => `<span class="chip">${k} <b>${esc(v)}</b></span>`).join('');
+    if ($('chips').innerHTML !== ch) $('chips').innerHTML = ch;
+    const p = s.pressure || 0;
+    $('pBar').style.width = Math.round(p * 100) + '%';
+    setText('pVal', c ? (p > 0 ? Math.round(p * 100) + '%' : '펜을 대 보세요') : '–');
+    setText('ppsVal', c ? `${s.pps}/초` : '–');
+    setText('ip', s.ips && s.ips.length ? s.ips[0] : 'Wi‑Fi 연결 없음');
+    setText('pin', s.pin);
+    setText('homeDevCount', devs.length + '대');
+    setText('homeDevSub', devs.length
+      ? devs.map((d) => d.model).join(', ')
+      : (s.adbMissing ? '태블릿 연결 도구(adb)가 필요해요' : 'USB 디버깅을 켠 태블릿을 연결하면 보여요'));
+
+    // 태블릿
+    setText('adbState', s.adbStatus || '');
+    show('adbWrap', s.adbMissing);
+    show('devEmpty', !devs.length && !s.adbMissing);
+    const dh = devs.map((d) => {
+      let tag, act;
+      if (d.busy) { tag = `<span class="badge acc">${esc(d.busy)}</span>`; act = '<span class="spin"></span>'; }
+      else if (d.state === 'unauthorized') { tag = `<span class="badge warn">태블릿에서 ‘USB 디버깅 허용’을 눌러 주세요</span>`; act = ''; }
+      else if (!d.app) { tag = '<span class="badge warn">앱 없음</span>'; act = `<button class="b pri" data-act="install" data-serial="${esc(d.serial)}">태블릿에 설치</button>`; }
+      else if (d.canUpdate) { tag = `<span class="badge acc">v${esc(d.app)} → v${esc(s.tabletApk)}</span>`; act = `<button class="b pri" data-act="install" data-serial="${esc(d.serial)}">업데이트</button>`; }
+      else { tag = `<span class="badge ok">v${esc(d.app)} 최신</span>`; act = `<button class="b" data-act="open" data-serial="${esc(d.serial)}">앱 열기</button>`; }
+      return `<div class="dev">${tabletIcon}<div class="grow"><div class="dev-name">${esc(d.model)}</div><div class="dev-meta">${esc(d.kind)} ${tag}</div></div>${act}</div>`;
+    }).join('');
+    const box = $('devices');
+    if (box.dataset.h !== dh) { box.innerHTML = dh; box.dataset.h = dh; }
+    setCheck('usbAuto', s.usbAuto);
+
+    // 기기 추가
+    const sh = s.share || {};
+    setText('shareUrl', sh.url || '–');
+    drawQr(sh.url || null);
+    const st = $('shareState');
+    st.className = 'badge ' + (sh.running ? 'ok' : 'mute');
+    setText('shareState', sh.running ? `켜짐 · ${sh.minutesLeft}분 뒤 자동으로 꺼져요` : '꺼짐');
+    setText('shareAlt', sh.otherUrls && sh.otherUrls.length ? '다른 주소: ' + sh.otherUrls.join(', ') : '');
+    setText('apkInfo', s.tabletApk ? `v${s.tabletApk} · ${s.apkSize || ''}` : '아직 없어요');
+    setText('exeInfo', `v${s.exeVersion || s.appVersion} · ${s.exeSize || ''} · 태블릿 앱 포함`);
+    $('usbInstall').disabled = !s.tabletApk;
+
+    // 펜 · 화면
+    const mons = s.monitors || [];
+    const sig = JSON.stringify(mons) + s.monitor;
+    const mb = $('monitors');
+    if (mb.dataset.sig !== sig) {
+      mb.dataset.sig = sig;
+      if (mons.length) {
+        const minX = Math.min(...mons.map((m) => m.x)), minY = Math.min(...mons.map((m) => m.y));
+        const maxX = Math.max(...mons.map((m) => m.x + m.w)), maxY = Math.max(...mons.map((m) => m.y + m.h));
+        const pad = Math.max(maxX - minX, maxY - minY) * 0.06, gap = pad * 0.25;
+        mb.setAttribute('viewBox', `${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}`);
+        const fs = (maxY - minY) * 0.1;
+        mb.innerHTML = mons.map((m, i) => {
+          const cx = m.x + m.w / 2, cy = m.y + m.h / 2;
+          return `<g data-i="${i}" class="${s.monitor === i ? 'on' : ''}"><rect x="${m.x + gap}" y="${m.y + gap}" width="${m.w - gap * 2}" height="${m.h - gap * 2}" rx="${fs * 0.6}"/>` +
+            `<text class="n" x="${cx}" y="${cy - fs * 0.7}" style="font-size:${fs * 1.6}px">${i + 1}</text>` +
+            `<text x="${cx}" y="${cy + fs * 0.9}" style="font-size:${fs}px">${m.w}×${m.h}${m.primary ? ' · 주' : ''}</text></g>`;
+        }).join('');
+      }
+      mb.classList.toggle('all', s.monitor === -1);
+      $('allMon').classList.toggle('pri', s.monitor === -1);
+    }
+    setCheck('keepAspect', s.keepAspect);
+    if (!editing) { const v = gammaToSlider(s.gamma); if (Number(curve.value) !== v) curve.value = v; }
+    drawCurve(p);
+
+    // 액정 타블렛 모드
+    setCheck('mirrorEnabled', s.mirrorEnabled);
+    document.querySelectorAll('#mirQ button').forEach((b) => b.classList.toggle('on', Number(b.dataset.q) === s.mirrorQuality));
+    const mi = s.mirror || {};
+    $('mirState').className = 'badge ' + (mi.active ? 'ok' : s.mirrorEnabled ? 'mute' : 'warn');
+    setText('mirState', mi.active
+      ? `태블릿에 보내는 중 · ${mi.fps}장/초 · ${mi.size} · ${(mi.kbps / 1024).toFixed(1)}MB/s`
+      : s.mirrorEnabled ? '대기 중 · 태블릿에서 켜요' : '허용 안 함');
+
+    // 단축키
+    const pf = (s.profiles || []).map((p) => `<button data-p="${p.id}" class="${p.id === s.shortcutProfile ? 'on' : ''}">${esc(p.name)}</button>`).join('');
+    if ($('profiles').innerHTML !== pf) $('profiles').innerHTML = pf;
+    renderBindings(s, false);
+    if (document.activeElement !== $('zoomWheel')) $('zoomWheel').value = s.zoomWheel || 'Ctrl';
+
+    // 업데이트
+    setText('vPc', 'v' + s.appVersion);
+    setText('vTab', s.tabletApk ? 'v' + s.tabletApk : '없음');
+    setText('vCon', c ? 'v' + s.tabletVersion : '–');
+    $('updProg').classList.toggle('on', !!s.updateStatus);
+    setText('updText', s.updateStatus || '');
+    $('pickUpdate').disabled = !!s.updateBusy;
+    $('checkOnline').disabled = !!s.updateBusy || !s.onlineConfigured;
+    $('checkOnline').title = s.onlineConfigured ? '' : '인터넷 업데이트 주소가 아직 설정되지 않았어요';
+    setCheck('checkOnline', s.checkOnline);
+    setText('onlineSub', s.onlineConfigured
+      ? (s.lastOnlineCheck ? `마지막 확인: ${s.lastOnlineCheck}` : '시작할 때와 6시간마다 확인해요')
+      : 'GitHub 연결 후 사용할 수 있어요');
+    setCheck('tabletAutoUpdate', s.tabletAutoUpdate);
+    setCheck('autoApplyPc', s.autoApplyPc);
+
+    // 설정
+    setCheck('startup', s.startup);
+    show('fwOk', !!s.firewallOk, 'inline-flex');
+    show('fwBtn', !s.firewallOk, 'inline-flex');
+    setText('instState', s.installed ? '설치됨' : '설치되지 않음 (지금 위치에서 실행 중)');
+    show('uninstBtn', !!s.installed, 'inline-flex');
+
+    // 알림
+    if (s.message && s.message !== lastMsg) toast(s.message, s.messageWarn);
+    lastMsg = s.message;
+
+    // 업데이트 확인
+    if (s.pending && shownPending !== s.pending.id) {
+      shownPending = s.pending.id;
+      setText('dlgTitle', `새 버전 v${s.pending.version}`);
+      setText('dlgBody', s.pending.source
+        ? `소스 코드라서 먼저 빌드해요(몇 분, 창 없이 진행). 끝나면 새 버전으로 다시 시작해요. 지금은 v${s.appVersion}이에요.`
+        : `PenBridge가 잠깐 꺼졌다가 새 버전으로 다시 시작해요. 지금은 v${s.appVersion}이에요.`);
+      setText('dlgFrom', '출처: ' + s.pending.origin);
+      $('updDlg').classList.add('on');
+    }
+    if (!s.pending) { shownPending = null; $('updDlg').classList.remove('on'); }
+  }
+
+  if (host) {
+    host.addEventListener('message', (e) => render(e.data));
+    send({ cmd: 'ready' });
+  } else {
+    // ── 미리보기용 가짜 상태 ──
+    const mock = {
+      appVersion: '1.4.1', connected: true, transport: 'Wi‑Fi', remote: '192.168.0.23', pps: 214, pressure: .42,
+      message: null, adbStatus: '1대 연결됨', adbMissing: false,
+      devices: [{ serial: 'HA2N585M', model: 'Android Tablet', kind: 'USB', app: '1.2.1', canUpdate: true }],
+      ips: ['192.168.0.10'], pin: '5533',
+      monitors: [{ x: 0, y: 0, w: 1920, h: 1080, primary: true }, { x: 1920, y: -180, w: 2560, h: 1440 }],
+      monitor: 0, usbAuto: true, keepAspect: true, gamma: 1, tabletApk: '1.4.1', apkSize: '6.1MB', exeSize: '55MB',
+      tabletVersion: '1.2.1', tabletAutoUpdate: true, autoApplyPc: false, startup: false, checkOnline: true,
+      onlineConfigured: true, lastOnlineCheck: '오늘 09:40', updateStatus: '', updateBusy: false, pending: null,
+      installed: true, installedVersion: null, firewallOk: true,
+      share: { running: true, url: 'http://192.168.0.10:8765', minutesLeft: 30, otherUrls: [] },
+      shortcutProfile: 'csp', zoomWheel: 'Ctrl', mirrorEnabled: true, mirrorQuality: 1,
+      mirror: { active: true, fps: 27, size: '1440×810', kbps: 1900 },
+      profiles: [{ id: 'common', name: 'Windows 기본' }, { id: 'csp', name: '클립 스튜디오' }, { id: 'ps', name: '포토샵' }, { id: 'krita', name: 'Krita' }],
+      bindings: [
+        { id: 'undo', label: '실행 취소', hint: '두 손가락 탭', keys: 'Ctrl+Z' }, { id: 'redo', label: '다시 실행', hint: '세 손가락 탭', keys: 'Ctrl+Y' },
+        { id: 'eraser', label: '지우개', hint: '툴바 · 다시 누르면 펜', keys: 'E' }, { id: 'pen', label: '펜으로', hint: '지우개를 끌 때', keys: 'P' },
+        { id: 'sizeDown', label: '브러시 작게', hint: '툴바 −', keys: '[' }, { id: 'sizeUp', label: '브러시 크게', hint: '툴바 +', keys: ']' },
+        { id: 'hand', label: '손 도구', hint: '누르는 동안 이동', keys: 'Space' }, { id: 'zoomIn', label: '확대', hint: '툴바 +돋보기', keys: 'Ctrl+=' },
+        { id: 'zoomOut', label: '축소', hint: '툴바 −돋보기', keys: 'Ctrl+-' }, { id: 'fit', label: '화면에 맞춤', hint: '툴바 맞춤', keys: 'Ctrl+0', custom: true },
+        { id: 'save', label: '저장', hint: '툴바 저장', keys: 'Ctrl+S' }],
+    };
+    const h = location.hash.slice(1);
+    if (h === 'idle') { mock.connected = false; mock.devices = []; mock.installed = false; mock.firewallOk = false; }
+    render(mock);
+    if (h && h !== 'idle') go(h);
+    let t = 0;
+    setInterval(() => { t += .08; mock.pressure = Math.max(0, Math.sin(t) * .5 + .4); render(mock); }, 60);
+  }
+})();
+</script>
+</body>
+</html>
