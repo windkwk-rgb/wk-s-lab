@@ -20,14 +20,31 @@
 
 </td>
 </tr>
+<tr>
+<td width="96" valign="top"><img src="SoftKVM/docs/images/icon.png" width="80" alt="SoftKVM"></td>
+<td valign="top">
+
+### [SoftKVM](SoftKVM/)
+키보드·마우스 하나로 **윈도우 PC · 서브 PC · 맥 · 안드로이드 태블릿 · 아이폰**을 오가는 소프트웨어 KVM.
+화면 끝으로 밀면 옆 기기로 넘어가고, 매크로 녹화·실행 · 배터리 표시 · 장소별 연결 저장 · 설치 파일 배포 · 자동 업데이트까지.
+
+`Python` `pynput` `pywebview` `PyInstaller` `Kotlin` `Android uhid` `Bluetooth HID` `GitHub Actions`
+
+[README](SoftKVM/README.md) · [사용 설명](SoftKVM/docs/USER-GUIDE.md) · [내려받기](https://github.com/windkwk-rgb/wk-s-lab/releases?q=softkvm&expanded=true)
+
+</td>
+</tr>
 </table>
 
 <img src="PenBridge/docs/images/laptop-home.png" alt="PenBridge 노트북 앱">
+
+<img src="SoftKVM/docs/images/main-layout.png" alt="SoftKVM 화면 배치">
 
 ## 구성
 
 ```
 PenBridge/            태블릿 ↔ 노트북 펜 입력 브릿지
+SoftKVM/              키보드·마우스 하나로 PC·맥·태블릿·아이폰 오가기
 .github/workflows/    프로젝트별 자동 빌드 · 릴리스 (태그: <프로젝트>-v<버전>)
 ```
 

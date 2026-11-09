@@ -1,0 +1,27 @@
+# 빌드 결과물
+build/
+dist/
+*.exe
+*.apk
+*.version
+KVM-patch-*.zip
+__pycache__/
+*.spec
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.iml
+
+# 실행하면 생기는 개인 설정·기록 (비밀번호·IP가 들어 있음)
+config.json
+profiles.json
+macro.json
+macros*.json
+*.log
+rebuild.lock
+backup/
+mac/*.json

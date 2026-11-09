@@ -1,0 +1,140 @@
+# SoftKVM: SoftKVM/ 폴더가 바뀌어 main에 올라가면 GitHub 서버가 설치 파일 4개를 만든다.
+#   KVM-Server.exe (메인 PC) · KVM-Client.exe (서브 PC, 메인으로도 전환 가능)
+#   KVM-Android.apk (태블릿) · KVM-mac.zip (맥)
+# SoftKVM/VERSION.txt 버전의 Release(태그 softkvm-v버전)가 아직 없으면 새로 만든다.
+#
+# 선택 Secret (Settings → Secrets and variables → Actions)
+#   SOFTKVM_DEBUG_KEYSTORE_B64 : 메인 PC의 %USERPROFILE%\.android\debug.keystore 를 base64로 바꾼 값
+#     → 이걸 넣어야 Release의 apk를 이미 설치된 태블릿 앱 위에 덮어 설치할 수 있어요.
+#       (없으면 GitHub 서버의 임시 키로 서명돼서, 기존 앱을 지우고 새로 설치해야 해요)
+name: SoftKVM build & release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'SoftKVM/**'
+      - '.github/workflows/softkvm.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: softkvm-release
+  cancel-in-progress: false
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'     # SoftKVM/android/gradle/wrapper/gradle-wrapper.properties 와 같게
+      - name: Android SDK
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" > /dev/null
+      - name: Signing key (메인 PC와 같은 키)
+        env:
+          KS: ${{ secrets.SOFTKVM_DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$KS" ]; then
+            echo "$KS" | base64 -d > ~/.android/debug.keystore
+          else
+            echo "::warning::SOFTKVM_DEBUG_KEYSTORE_B64가 없어 임시 키로 서명해요. 기존 태블릿 앱 위에 덮어 설치할 수 없어요."
+          fi
+      - name: Build APK
+        working-directory: SoftKVM/android
+        run: |
+          gradle assembleDebug --no-daemon --console=plain --warning-mode=none
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/KVM-Android.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: KVM-Android.apk
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: SoftKVM
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 패키지 설치
+        run: python -m pip install --disable-pip-version-check pynput pyperclip pystray pillow pywebview pyinstaller qrcode
+      - name: 문법 확인
+        run: python -m py_compile windows/server.py windows/client.py windows/kvm_common.py mac/client.py
+      - name: KVM-Server.exe (메인 PC)
+        run: >
+          python -m PyInstaller --noconfirm --onefile --noconsole --name KVM-Server
+          --icon windows/kvm-server.ico
+          --add-data "windows/kvm-server.ico;." --add-data "windows/ui.html;." --add-data "windows/client_ui.html;."
+          --add-data "windows/kvm-client.ico;." --add-data "VERSION.txt;."
+          --distpath out --workpath build --specpath build windows/server.py
+      - name: KVM-Client.exe (서브 PC)
+        run: >
+          python -m PyInstaller --noconfirm --onefile --noconsole --name KVM-Client
+          --icon windows/kvm-client.ico
+          --add-data "windows/kvm-client.ico;." --add-data "windows/client_ui.html;." --add-data "VERSION.txt;."
+          --add-data "windows/ui.html;." --add-data "windows/kvm-server.ico;."
+          --distpath out --workpath build --specpath build windows/client.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exe
+          path: SoftKVM/out/*.exe
+
+  release:
+    needs: [android, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: KVM-mac.zip (실행 권한 · 한글 파일 이름 유지)
+        run: |
+          python3 - <<'EOF'
+          import os, time, zipfile
+          src = "SoftKVM/mac"
+          with zipfile.ZipFile("dist/KVM-mac.zip", "w", zipfile.ZIP_DEFLATED) as z:
+              for name in sorted(os.listdir(src)):
+                  full = os.path.join(src, name)
+                  if not os.path.isfile(full) or name.endswith(".json"):
+                      continue
+                  info = zipfile.ZipInfo("KVM-mac/" + name, time.localtime(os.path.getmtime(full))[:6])
+                  info.external_attr = (0o100755 if name.endswith((".command", ".py")) else 0o100644) << 16
+                  info.flag_bits |= 0x800
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  z.writestr(info, open(full, "rb").read())
+          EOF
+          ls -la dist
+      - name: Create release (새 버전일 때만)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER=$(tr -d ' \r\n' < SoftKVM/VERSION.txt)
+          TAG="softkvm-v$VER"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "$TAG Release가 이미 있어요. SoftKVM/VERSION.txt를 올리면 새로 만들어요."
+          else
+            gh release create "$TAG" dist/KVM-Server.exe dist/KVM-Client.exe dist/KVM-Android.apk dist/KVM-mac.zip \
+              --title "SoftKVM v$VER" \
+              --notes "자동 빌드.
+          - **KVM-Server.exe**: 키보드·마우스가 꽂힌 메인 PC에서 실행
+          - **KVM-Client.exe**: 서브 PC에서 실행 (화면에서 메인으로 바꿀 수도 있어요)
+          - **KVM-Android.apk**: 안드로이드 태블릿 앱 (아이폰은 태블릿을 거쳐 블루투스로 연결)
+          - **KVM-mac.zip**: 압축을 풀고 'KVM 맥 실행.command'를 우클릭 → 열기
+
+          한 번 설치하면 그다음부터는 메인 PC가 다른 기기들을 알아서 업데이트해요."
+          fi

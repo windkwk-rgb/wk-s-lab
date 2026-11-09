@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PC 마우스 공유</string>
+    <string name="a11y_name">PC 마우스 공유 (마우스)</string>
+    <string name="a11y_desc">윈도우 PC의 마우스로 이 기기를 조작합니다. 화면에 커서를 그리고 탭·드래그·스크롤을 대신 수행합니다.</string>
+    <string name="ime_name">PC 키보드 공유</string>
+</resources>
