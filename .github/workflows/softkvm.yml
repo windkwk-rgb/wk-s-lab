@@ -74,19 +74,20 @@ jobs:
         run: python -m pip install --disable-pip-version-check pynput pyperclip pystray pillow pywebview pyinstaller qrcode
       - name: 문법 확인
         run: python -m py_compile windows/server.py windows/client.py windows/kvm_common.py mac/client.py
+      # --add-data 경로는 build 폴더(--specpath) 기준이라 절대 경로로 넘김
       - name: KVM-Server.exe (메인 PC)
         run: >
           python -m PyInstaller --noconfirm --onefile --noconsole --name KVM-Server
-          --icon windows/kvm-server.ico
-          --add-data "windows/kvm-server.ico;." --add-data "windows/ui.html;." --add-data "windows/client_ui.html;."
-          --add-data "windows/kvm-client.ico;." --add-data "VERSION.txt;."
+          --icon "$PWD/windows/kvm-server.ico"
+          --add-data "$PWD/windows/kvm-server.ico;." --add-data "$PWD/windows/ui.html;." --add-data "$PWD/windows/client_ui.html;."
+          --add-data "$PWD/windows/kvm-client.ico;." --add-data "$PWD/VERSION.txt;."
           --distpath out --workpath build --specpath build windows/server.py
       - name: KVM-Client.exe (서브 PC)
         run: >
           python -m PyInstaller --noconfirm --onefile --noconsole --name KVM-Client
-          --icon windows/kvm-client.ico
-          --add-data "windows/kvm-client.ico;." --add-data "windows/client_ui.html;." --add-data "VERSION.txt;."
-          --add-data "windows/ui.html;." --add-data "windows/kvm-server.ico;."
+          --icon "$PWD/windows/kvm-client.ico"
+          --add-data "$PWD/windows/kvm-client.ico;." --add-data "$PWD/windows/client_ui.html;." --add-data "$PWD/VERSION.txt;."
+          --add-data "$PWD/windows/ui.html;." --add-data "$PWD/windows/kvm-server.ico;."
           --distpath out --workpath build --specpath build windows/client.py
       - uses: actions/upload-artifact@v4
         with:
