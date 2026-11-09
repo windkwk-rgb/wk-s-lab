@@ -30,7 +30,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      # GitHub 서버에 미리 깔린 Android SDK 사용 (ANDROID_HOME)
+      - name: Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - name: Signing key
         env:
           KS: ${{ secrets.PENBRIDGE_KEYSTORE_B64 }}
