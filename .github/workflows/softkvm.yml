@@ -16,6 +16,11 @@ on:
       - 'SoftKVM/**'
       - '.github/workflows/softkvm.yml'
   workflow_dispatch:
+    inputs:
+      replace:
+        description: '이미 있는 Release의 설치 파일을 새로 만든 것으로 바꾸기 (같은 버전 다시 빌드할 때)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -126,8 +131,14 @@ jobs:
         run: |
           VER=$(tr -d ' \r\n' < SoftKVM/VERSION.txt)
           TAG="softkvm-v$VER"
+          FILES="dist/KVM-Server.exe dist/KVM-Client.exe dist/KVM-Android.apk dist/KVM-mac.zip"
           if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "$TAG Release가 이미 있어요. SoftKVM/VERSION.txt를 올리면 새로 만들어요."
+            if [ "${{ inputs.replace }}" = "true" ]; then
+              gh release upload "$TAG" $FILES --clobber
+              echo "$TAG Release의 설치 파일을 새로 만든 것으로 바꿨어요."
+            else
+              echo "$TAG Release가 이미 있어요. SoftKVM/VERSION.txt를 올리면 새로 만들어요."
+            fi
           else
             gh release create "$TAG" dist/KVM-Server.exe dist/KVM-Client.exe dist/KVM-Android.apk dist/KVM-mac.zip \
               --title "SoftKVM v$VER" \
