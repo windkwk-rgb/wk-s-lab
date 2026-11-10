@@ -6,6 +6,7 @@
 |---|---|---|
 | `PenBridge/` | 안드로이드 태블릿 → Windows 펜 입력 브릿지 (C# + Kotlin) | `PenBridge/CLAUDE.md` |
 | `SoftKVM/` | 키보드·마우스 하나로 PC·맥·태블릿·아이폰을 오가는 소프트웨어 KVM (Python + Kotlin) | `SoftKVM/CLAUDE.md` |
+| `D2RSkinBuilder/` | 디아블로 II 레저렉션 스킨(mpq)에 원하는 기능만 골라 얹는 스킨 빌더 (Go + HTML) | `D2RSkinBuilder/CLAUDE.md` |
 
 ## 저장소 규칙
 

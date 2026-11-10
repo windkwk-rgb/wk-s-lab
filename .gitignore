@@ -5,3 +5,7 @@ PenBridge-build-log.txt
 *.jks
 .DS_Store
 Thumbs.db
+# D2RSkinBuilder: 실제 기능 묶음(다른 제작자 스킨 파일) · 배포 스냅숏 · 빌드 결과
+D2RSkinBuilder/private/
+D2RSkinBuilder/release/
+D2RSkinBuilder/dist/

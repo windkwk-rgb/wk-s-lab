@@ -34,17 +34,34 @@
 
 </td>
 </tr>
+<tr>
+<td width="96" valign="top"><img src="D2RSkinBuilder/docs/images/icon.png" width="80" alt="D2R 스킨 빌더"></td>
+<td valign="top">
+
+### [D2R 스킨 빌더](D2RSkinBuilder/)
+디아블로 II 레저렉션 **스킨(mpq)에 원하는 기능만 골라 얹는** 프로그램.
+쓰던 스킨은 그대로 두고 미니맵 고정 · 몬스터 특성 강조 · 큐브 같이 열기 같은 기능을 덧붙여 새 스킨으로. 튕김 원인 찾기 · mpq로 업그레이드까지.
+
+`Go` `MPQ (직접 구현)` `embed` `HTML/JS` `Python` `GitHub Actions`
+
+[README](D2RSkinBuilder/README.md) · [동작 원리](D2RSkinBuilder/docs/ARCHITECTURE.md)
+
+</td>
+</tr>
 </table>
 
 <img src="PenBridge/docs/images/laptop-home.png" alt="PenBridge 노트북 앱">
 
 <img src="SoftKVM/docs/images/main-layout.png" alt="SoftKVM 화면 배치">
 
+<img src="D2RSkinBuilder/docs/images/editor.png" alt="D2R 스킨 빌더 기능 고르기">
+
 ## 구성
 
 ```
 PenBridge/            태블릿 ↔ 노트북 펜 입력 브릿지
 SoftKVM/              키보드·마우스 하나로 PC·맥·태블릿·아이폰 오가기
+D2RSkinBuilder/       디아블로 II 레저렉션 스킨에 원하는 기능만 골라 얹기
 .github/workflows/    프로젝트별 자동 빌드 · 릴리스 (태그: <프로젝트>-v<버전>)
 ```
 

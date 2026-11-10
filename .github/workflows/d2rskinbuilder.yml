@@ -1,0 +1,50 @@
+# D2RSkinBuilder: D2RSkinBuilder/ 폴더가 바뀌어 main에 올라가면 GitHub 서버가 시험을 돌리고 exe를 빌드한다.
+# 공개 저장소에는 다른 제작자의 스킨 파일(실제 기능 묶음)이 없어서, 예제 기능 묶음(pack/sample)으로만 빌드한다.
+# 그래서 Release는 만들지 않고, 빌드 결과는 Actions 실행 화면의 Artifacts 로만 올린다.
+name: D2RSkinBuilder build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'D2RSkinBuilder/**'
+      - '.github/workflows/d2rskinbuilder.yml'
+  pull_request:
+    paths:
+      - 'D2RSkinBuilder/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: D2RSkinBuilder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: 코드 검사 (윈도우 · 그 외)
+        run: |
+          gofmt -l . | tee /tmp/fmt.txt
+          test ! -s /tmp/fmt.txt
+          go vet ./...
+          GOOS=windows go vet ./...
+          GOOS=windows go vet -tags slim ./...
+      - name: 시험 (작은 스킨을 만들어 기능 얹기)
+        run: go test -v ./...
+      - name: Windows exe 빌드 (예제 기능 묶음)
+        run: |
+          VER=$(tr -d ' \r\n' < version.txt)
+          mkdir -p dist
+          GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H windowsgui -s -w" -o "dist/D2RSkinBuilder-sample-v$VER.exe" .
+          GOOS=windows GOARCH=amd64 go build -trimpath -tags slim -ldflags "-H windowsgui -s -w" -o "dist/D2RSkinBuilder-slim-v$VER.exe" .
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: D2RSkinBuilder-sample
+          path: D2RSkinBuilder/dist/*.exe

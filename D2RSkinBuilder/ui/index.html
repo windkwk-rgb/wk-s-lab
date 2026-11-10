@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D2R 스킨 빌더</title>
+<link rel="icon" href="icon.png">
+<style>
+:root {
+  --bg: #111317; --panel: #1a1d23; --panel2: #22262e; --line: #2e333d; --text: #e9ecf1; --dim: #99a1ae;
+  --gold: #d9b45a; --green: #3fae6a; --green2: #2f8f55; --red: #e0675b; --blue: #5b9ae0; --warn: #f0a35b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.hidden { display: none !important; }
+.home { max-width: 780px; margin: 0 auto; padding: 32px 20px 60px; }
+.brand { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.brand h1 { margin: 0; font-size: 24px; color: var(--gold); letter-spacing: .5px; }
+.brand span { color: var(--dim); font-size: 13px; }
+.lead { color: var(--dim); font-size: 14px; margin: 0 0 22px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+.card .row { display: flex; align-items: center; gap: 14px; }
+.card .num { width: 30px; height: 30px; border-radius: 50%; background: var(--panel2); color: var(--gold); display: grid; place-items: center; font-weight: 700; flex: none; }
+.card .body { flex: 1; min-width: 0; }
+.card .title { font-weight: 700; font-size: 16px; }
+.sub { color: var(--dim); font-size: 13.5px; word-break: break-all; }
+.sub.ok { color: #8fd6a8; } .sub.bad { color: var(--warn); }
+.btn { background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 14px; white-space: nowrap; }
+.btn:hover { border-color: #4a515e; }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0 44px; }
+.chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; padding: 3px 12px; font-size: 13px; }
+.chip.on { border-color: var(--blue); color: #cfe2ff; }
+button.chip:hover { border-color: #4a515e; }
+.big { width: 100%; margin-top: 8px; padding: 18px; border: 0; border-radius: 14px; background: var(--green); font-size: 19px; font-weight: 700; color: #fff; }
+.big:hover { background: #46bb74; }
+.big:disabled { background: #3a3f48; color: var(--dim); cursor: default; }
+.progress { margin-top: 14px; }
+.bar { height: 10px; background: var(--panel2); border-radius: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--green); transition: width .2s; }
+.progress .step { color: var(--dim); font-size: 13.5px; margin-top: 6px; }
+.result { margin-top: 14px; border-radius: 14px; padding: 18px 20px; }
+.result.ok { background: #16281e; border: 1px solid #2c5a3d; }
+.result.err { background: #2c1a19; border: 1px solid #6b3430; }
+.result h3 { margin: 0 0 8px; font-size: 17px; }
+.result p { margin: 6px 0; }
+.code { display: inline-flex; align-items: center; gap: 8px; background: #0c0e11; border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px 4px 12px; font-family: Consolas, monospace; font-size: 15px; color: #fff; }
+.steps { margin: 8px 0 0; padding-left: 20px; color: #cfd6e0; }
+.foot { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.linkbtn { background: none; border: 0; color: var(--dim); font-size: 13px; text-decoration: underline; }
+details.log { margin-top: 8px; } details.log pre { white-space: pre-wrap; font-size: 12px; color: #b9c0cc; max-height: 260px; overflow: auto; background: #0c0e11; padding: 8px; border-radius: 8px; }
+
+.editor { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
+.topbar { display: flex; gap: 10px; align-items: center; padding: 12px 18px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.topbar input { flex: 1; min-width: 160px; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; color: var(--text); font: inherit; }
+.topbar .changed { color: var(--gold); font-size: 13.5px; white-space: nowrap; }
+.filters { display: flex; gap: 6px; }
+.filters button { background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; padding: 5px 12px; font-size: 13px; }
+.filters button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.cmpbar { padding: 6px 18px; font-size: 13px; color: var(--dim); background: #15181d; border-bottom: 1px solid var(--line); }
+.split { flex: 1; display: flex; min-height: 0; }
+nav { width: 260px; flex: none; overflow: auto; border-right: 1px solid var(--line); padding: 10px 8px; }
+nav button { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 8px 10px; color: var(--dim); font-size: 13.5px; }
+nav button:hover { background: var(--panel); color: var(--text); }
+nav button b { float: right; font-weight: 400; color: #6d7582; }
+nav button b.sel { color: var(--gold); }
+.list { flex: 1; overflow: auto; padding: 16px 22px 60px; }
+.gtitle { font-size: 17px; font-weight: 700; color: var(--gold); margin: 22px 0 10px; }
+.gtitle:first-child { margin-top: 0; }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+.item.sel { border-color: #2d5577; box-shadow: inset 3px 0 0 var(--blue); }
+.item .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.item .name { font-weight: 700; }
+.badge { font-size: 11.5px; padding: 1px 8px; border-radius: 20px; background: var(--panel2); color: var(--dim); border: 1px solid var(--line); white-space: nowrap; }
+.st-same { background: #1c2a22; color: #8fd6a8; border-color: #2c5a3d; }
+.st-new { background: #1d2f3f; color: #7fc4ff; border-color: #2d5577; }
+.st-patch { background: #1d2f3f; color: #7fc4ff; border-color: #2d5577; }
+.st-replace { background: #3a3120; color: var(--gold); border-color: #6b5a2c; }
+.st-cant { background: #2c1a19; color: var(--red); border-color: #6b3430; }
+.easy { display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; margin: 8px 0 10px; font-size: 13.5px; }
+.easy .k { color: var(--dim); white-space: nowrap; }
+.easy .k.d { color: #7fc4ff; } .easy .k.w { color: var(--warn); }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opts button { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 13.5px; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.3; }
+.opts button small { font-size: 11px; color: var(--dim); }
+.opts button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.opts button.on small { color: #dce9ff; }
+.opts button.none.on { background: #4a4f58; border-color: #4a4f58; }
+.detail { margin-top: 8px; font-size: 13px; background: #15181d; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
+.detail .w { color: var(--warn); } .detail .ok { color: #8fd6a8; } .detail .bad { color: var(--red); }
+.params { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; }
+.params label { font-size: 13px; color: var(--dim); display: flex; align-items: center; gap: 6px; }
+.params label.num input[type=number] { width: 70px; }
+.params label.num input[type=range] { width: 140px; padding: 0; }
+.params select, .params input { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; color: var(--text); font: inherit; font-size: 13.5px; }
+.prev { display: flex; gap: 6px; margin: 4px 0 10px; flex-wrap: wrap; }
+.prev img { width: 54px; height: 54px; object-fit: contain; background: #0c0e11; border-radius: 6px; border: 1px solid var(--line); }
+.shots { margin: 2px 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.srow { background: #15181d; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.sfile { font-size: 11.5px; color: #6d7582; margin-bottom: 6px; word-break: break-all; }
+.scells { display: flex; gap: 10px; flex-wrap: wrap; }
+.scell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 96px; }
+.scell .lab { font-size: 12px; color: var(--dim); max-width: 150px; text-align: center; }
+.scell img { height: 92px; max-width: 150px; object-fit: contain; border-radius: 6px; cursor: zoom-in; background: repeating-conic-gradient(#23272e 0% 25%, #1b1e24 0% 50%) 50% / 14px 14px; }
+.scell .ph { height: 92px; width: 96px; display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--warn); border: 1px dashed #4a4f58; border-radius: 6px; padding: 4px; }
+.scell .ph.same { color: var(--dim); }
+.play { background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; padding: 5px 14px; font-size: 13px; }
+.play.on { background: var(--green2); border-color: var(--green2); color: #fff; }
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: grid; place-items: center; z-index: 50; cursor: zoom-out; }
+.lightbox img { width: min(520px, 90vw); max-height: 80vh; object-fit: contain; background: repeating-conic-gradient(#23272e 0% 25%, #1b1e24 0% 50%) 50% / 20px 20px; }
+.lightbox div { color: #ddd; margin-top: 10px; text-align: center; }
+.ptable { border-collapse: collapse; margin: 6px 0 12px; font-size: 13px; background: #0c0e11; border-radius: 8px; overflow: hidden; }
+.ptable th, .ptable td { padding: 4px 10px; border-bottom: 1px solid #1f232a; text-align: left; white-space: nowrap; }
+.ptable th { color: var(--dim); font-weight: 400; background: #15181d; }
+.ptable td.on, .ptable th.on { background: #18263a; }
+.ptable img { height: 30px; vertical-align: middle; }
+.fontrow { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 12px; }
+.fontbox { background: #0c0e11; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 260px; }
+.fontbox .lab { font-size: 12px; color: var(--dim); } .fontbox .smp { font-size: 22px; line-height: 1.4; color: #e9dcb5; }
+.empty { text-align: center; color: var(--dim); padding: 50px; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #2b3038; border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 60; }
+.profrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.profrow select { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; color: var(--text); font: inherit; font-size: 13.5px; min-width: 160px; }
+#diffCard h3 { margin: 0 0 6px; font-size: 16px; } #diffCard table { border-collapse: collapse; font-size: 13px; margin: 6px 0; }
+#diffCard td, #diffCard th { padding: 3px 10px; border-bottom: 1px solid var(--line); text-align: left; } #diffCard th { color: var(--dim); font-weight: 400; white-space: nowrap; }
+.bis { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: grid; place-items: center; z-index: 55; }
+.bis .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; width: min(640px, 92vw); max-height: 86vh; overflow: auto; }
+.bis h2 { margin: 0 0 6px; font-size: 19px; } .bis .sub { margin-bottom: 12px; }
+.bis ul { margin: 6px 0 14px; padding-left: 20px; font-size: 13.5px; color: var(--dim); max-height: 220px; overflow: auto; }
+.bis .acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.bis .good { background: var(--green2); border-color: var(--green2); color: #fff; } .bis .badb { background: #8a2c2c; border-color: #8a2c2c; color: #fff; }
+@media (max-width: 760px) { nav { display: none; } .list { padding: 12px; } .chips { margin-left: 0; } }
+</style>
+</head>
+<body>
+
+<div class="home" id="home">
+  <div class="brand"><h1>D2R 스킨 빌더</h1><span id="ver"></span></div>
+  <p class="lead">내가 쓰는 스킨(mpq)을 그대로 두고, 원하는 기능만 골라 얹어서 새 스킨을 만들어요. 원래 스킨 파일은 바뀌지 않아요.</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="num">1</div>
+      <div class="body"><div class="title">게임 폴더</div><div class="sub" id="gameSub">찾는 중...</div></div>
+      <button class="btn" onclick="pickGame()">폴더 고르기</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="num">2</div>
+      <div class="body"><div class="title">기준 스킨</div><div class="sub" id="baseSub"></div></div>
+      <button class="btn" onclick="pickBase('')">mpq 파일 고르기</button>
+    </div>
+    <div class="chips" id="modChips"></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="num">3</div>
+      <div class="body"><div class="title">덧붙일 기능</div><div class="sub" id="featSub"></div></div>
+      <button class="btn" onclick="openEditor()">기능 고르기</button>
+    </div>
+    <div class="chips" id="selChips"></div>
+    <div class="profrow"><span class="sub">내 설정</span><select id="profSel"></select>
+      <button class="btn small" onclick="profCmd('load')">불러오기</button>
+      <button class="btn small" onclick="profSave()">지금 설정 저장</button>
+      <button class="linkbtn" onclick="profCmd('delete')">지우기</button></div>
+  </div>
+  <div class="card hidden" id="diffCard"></div>
+
+  <button class="big" id="buildBtn" onclick="startBuild()">스킨 만들어서 게임에 넣기</button>
+  <div class="progress hidden" id="prog"><div class="bar"><i id="barFill"></i></div><div class="step" id="stepTxt"></div></div>
+  <div class="result hidden" id="result"></div>
+
+  <div class="foot">
+    <button class="linkbtn" onclick="api('/api/open',{})">만든 스킨 파일이 있는 폴더 열기</button>
+    <button class="linkbtn" id="uninstBtn" onclick="uninstall()">게임에서 만든 스킨 빼기</button>
+    <button class="linkbtn" onclick="startBisect()">게임이 튕겨요 (원인 찾기)</button>
+    <button class="linkbtn" onclick="applyPatch()">최신 mpq / 패치 파일 넣기 (업그레이드)</button>
+  </div>
+</div>
+
+<div class="editor hidden" id="editor">
+  <div class="topbar">
+    <button class="btn" onclick="closeEditor()">← 다 골랐어요</button>
+    <input id="q" placeholder="찾기 (예: 큐브, 로비, 화살표, 물약, 룬, 소리)">
+    <div class="filters" id="filters"></div>
+    <span class="changed" id="chgCount"></span>
+    <button class="btn small" onclick="applyPreset()">추천대로 고르기</button>
+    <button class="btn small" onclick="resetAll()">모두 빼기</button>
+  </div>
+  <div class="cmpbar" id="cmpbar"></div>
+  <div class="split"><nav id="nav"></nav><div class="list" id="list"></div></div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<div class="bis hidden" id="bis"><div class="box" id="bisBox"></div></div>
+<div class="lightbox hidden" id="lb" onclick="this.classList.add('hidden')"><div><img id="lbImg"><div id="lbCap"></div></div></div>
+
+<script>
+let P = null, S = {choices: {}, params: {}}, STATE = null, STATUS = {}, saveTimer = null, FILTER = 'mine';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const byId = {};
+async function api(url, body) {
+  const r = await fetch(url, body === undefined ? {cache: 'no-store'} : {method: 'POST', body: JSON.stringify(body)});
+  return r.json();
+}
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 2600); }
+function mb(n) { return (n / 1048576).toFixed(0) + 'MB'; }
+
+// ---------- 설정
+function chosen(f) { return S.choices[f.id] || ''; }
+function setChoice(f, key) {
+  if (key) S.choices[f.id] = key; else delete S.choices[f.id];
+  if (key) for (const r of (f.requires || [])) if (!S.choices[r]) { S.choices[r] = byId[r].options[0].key; toast(`"${byId[r].name}"도 같이 켰어요 (꼭 필요해요)`); }
+  if (!key) for (const g of P.features) if ((g.requires || []).includes(f.id) && S.choices[g.id]) { delete S.choices[g.id]; toast(`"${g.name}"도 같이 뺐어요 (이 기능이 있어야 해요)`); }
+  queueSave();
+}
+function param(id, dflt) { return id in S.params ? S.params[id] : dflt; }
+function queueSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); updateCounts(); }
+async function saveNow() { clearTimeout(saveTimer); saveTimer = null; await api('/api/settings', S); }
+function selCount() { return Object.keys(S.choices).filter(k => byId[k]).length; }
+
+// ---------- 첫 화면
+function renderHome() {
+  const st = STATE;
+  $('ver').textContent = 'v' + st.version;
+  const g = $('gameSub');
+  if (st.gameFound) { g.textContent = '✓ ' + st.gameDir; g.className = 'sub ok'; }
+  else { g.textContent = '게임 폴더를 못 찾았어요. [폴더 고르기]로 알려 주세요 (안 고르면 이 프로그램 폴더에 만들어져요)'; g.className = 'sub bad'; }
+  const b = $('baseSub');
+  if (st.base) { b.innerHTML = `✓ <b>${esc(st.base.mod)}</b> — ${esc(st.base.path)}<br>파일 ${st.base.files}개 · ${mb(st.base.size)} · ${esc(st.base.time)}`; b.className = 'sub ok'; }
+  else if (st.baseErr) { b.textContent = st.baseErr; b.className = 'sub bad'; }
+  else if (st.basePath) { b.textContent = '여는 중... ' + st.basePath; b.className = 'sub'; }
+  else { b.textContent = '기능을 얹을 스킨 mpq를 골라 주세요 (예: 게임폴더\\mods\\yupgoolg\\yupgoolg.mpq)'; b.className = 'sub bad'; }
+  $('modChips').innerHTML = (st.mods || []).length
+    ? '<span class="sub" style="align-self:center">게임 폴더에 있는 스킨:</span>' + st.mods.map(m => `<button class="chip ${st.base && st.base.path === m.path ? 'on' : ''}" onclick='pickBase(${JSON.stringify(m.path)})'>${esc(m.name)} <span class="sub">${esc(m.time)}</span></button>`).join('')
+    : '';
+  $('buildBtn').disabled = !st.base || st.job.running;
+  $('uninstBtn').classList.toggle('hidden', !st.installed);
+  updateCounts();
+}
+function updateCounts() {
+  const n = selCount();
+  $('featSub').textContent = n ? `${n}개 골랐어요` : '아직 고른 기능이 없어요 (안 골라도 기준 스킨 그대로 만들 수 있어요)';
+  $('selChips').innerHTML = P.features.filter(f => S.choices[f.id]).map(f => {
+    const o = f.options.find(o => o.key === S.choices[f.id]);
+    return `<span class="chip">${esc(f.name)}${f.options.length > 1 && o ? ' · ' + esc(o.label) : ''}</span>`;
+  }).join('');
+  $('chgCount').textContent = n ? `고른 기능 ${n}개` : '';
+}
+
+async function refresh() { STATE = await api('/api/state'); renderHome(); return STATE; }
+async function pickGame() {
+  toast('폴더 고르는 창이 떴어요 (안 보이면 작업표시줄을 확인하세요)');
+  const r = await api('/api/pickgame', {});
+  if (!r.ok) { if (r.error) alert(r.error); return; }
+  await refresh(); toast('게임 폴더를 바꿨어요');
+}
+async function pickBase(path) {
+  if (!path) toast('파일 고르는 창이 떴어요 (안 보이면 작업표시줄을 확인하세요)');
+  const r = await api('/api/pickbase', {Path: path});
+  if (!r.ok) { if (r.error) alert(r.error); await refresh(); return; }
+  STATUS = {};
+  await refresh(); toast('기준 스킨을 열었어요. 기능마다 이 스킨과 비교하고 있어요');
+  pollStatus();
+}
+async function pollStatus() {
+  const r = await api('/api/status');
+  STATUS = r.status || {};
+  const c = r.cmp;
+  $('cmpbar').innerHTML = !STATE.base ? '기준 스킨을 고르면 기능마다 “이미 있음 / 새로 더함 / 바꿈”을 알려 드려요'
+    : c.running ? `기준 스킨(${esc(STATE.base.mod)})과 비교하는 중... ${c.total ? Math.round(c.done * 100 / c.total) : 0}%`
+    : `기준 스킨 <b>${esc(STATE.base.mod)}</b>과 비교했어요 — <span class="badge st-same">✓ 이미 있음</span> <span class="badge st-new">새로 더함</span> <span class="badge st-patch">덧붙임</span> <span class="badge st-replace">⚠ 기준 스킨 파일을 바꿈</span> <span class="badge st-cant">넣을 수 없음</span>`;
+  if (!$('editor').classList.contains('hidden')) renderList(true);
+  renderHomeCheck();
+  if (c.running) setTimeout(pollStatus, 1000); else loadDiff();
+}
+
+async function startBuild() {
+  if (saveTimer) await saveNow();
+  $('result').classList.add('hidden'); $('buildBtn').disabled = true;
+  $('prog').classList.remove('hidden'); $('barFill').style.width = '0%'; $('stepTxt').textContent = '준비 중...';
+  const r = await api('/api/build', {});
+  if (!r.ok) { $('buildBtn').disabled = false; $('prog').classList.add('hidden'); showResult(false, r.error); return; }
+  const tick = async () => {
+    const st = await refresh(); const j = st.job;
+    $('barFill').style.width = j.percent + '%'; $('stepTxt').textContent = `${j.step || ''} ${j.percent ? j.percent + '%' : ''}`;
+    if (!j.done) return setTimeout(tick, 300);
+    $('prog').classList.add('hidden');
+    if (j.error) showResult(false, j.error, j.log); else showResult(true, j);
+    renderHome();
+  };
+  tick();
+}
+function showResult(ok, j, lg) {
+  const box = $('result');
+  box.className = 'result ' + (ok ? 'ok' : 'err');
+  const logHtml = l => (l && l.length) ? `<details class="log"><summary class="sub">자세한 기록</summary><pre>${esc(l.join('\n'))}</pre></details>` : '';
+  if (!ok) { box.innerHTML = `<h3>만들지 못했어요</h3><p>${esc(j)}</p>${logHtml(lg)}`; return; }
+  const cmd = '-mod ' + STATE.modName;
+  box.innerHTML = `<h3>✅ 완성! ${j.inGame ? '게임에 넣었어요' : '만들었어요'}</h3>
+    ${j.inGame ? '' : `<p>게임 폴더를 몰라서 이 프로그램 폴더에 만들었어요. [만든 스킨 파일이 있는 폴더 열기]에서 <b>mods</b> 폴더를 게임 폴더 안에 복사하세요.</p>`}
+    <p>기준 스킨(${esc(STATE.base.mod)}) 파일은 그대로 두고, <b>mods\\${esc(STATE.modName)}</b>에 새로 만들었어요.</p>
+    <p><b>처음 한 번만</b> 게임 실행 옵션을 바꿔 주세요 (예전 스킨빌더로 이미 했다면 그대로 두면 돼요):</p>
+    <ol class="steps"><li>Battle.net → 디아블로 II: 레저렉션 → 재생 버튼 옆 ⚙ → <b>게임 설정</b></li><li><b>추가 명령줄 인수</b>에 아래 글자 (원래 스킨 이름 대신)</li></ol>
+    <p style="margin-top:10px"><span class="code">${cmd} <button class="btn small" onclick="copyCmd('${cmd}')">복사</button></span></p>
+    ${logHtml(j.log)}`;
+}
+function copyCmd(t) { navigator.clipboard.writeText(t).then(() => toast('복사했어요'), () => toast(t)); }
+async function uninstall() {
+  if (!confirm('게임에 넣은 "만든 스킨"을 뺄까요? (기준 스킨과 설정은 그대로 남아요)')) return;
+  const r = await api('/api/uninstall', {});
+  if (!r.ok) alert(r.error);
+  await refresh(); toast('뺐어요. 게임 실행 옵션을 원래 스킨 이름(-mod ' + (STATE.base ? STATE.base.mod : '...') + ')으로 바꾸면 원래 스킨으로 돌아가요');
+}
+
+// ---------- 기능 고르기
+function openEditor() { $('home').classList.add('hidden'); $('editor').classList.remove('hidden'); renderFilters(); renderList(); pollStatus(); }
+function closeEditor() { $('editor').classList.add('hidden'); $('home').classList.remove('hidden'); if (saveTimer) saveNow(); updateCounts(); }
+function applyPreset() {
+  const pr = (P.presets || [])[0]; if (!pr) return;
+  if (!confirm(`"${pr.name}" 설정으로 바꿀까요? 지금 고른 것은 지워져요.`)) return;
+  S.choices = Object.assign({}, pr.choices); Object.assign(S.params, pr.params); queueSave(); renderList();
+}
+function resetParams(id) {
+  const f = P.features.find(x => x.id === id); if (!f) return;
+  for (const p of f.params || []) S.params[p.id] = p.default;
+  queueSave(); renderList(true);
+}
+
+// ---- 튕김 원인 찾기
+let BIS = null, BISN = {}, bisTimer = null;
+async function startBisect() {
+  if (!confirm('고른 기능을 반씩 나눠 넣은 시험 스킨을 차례로 만들어 게임에 넣어요.\n매번 게임을 켜 보고 "켜졌어요 / 튕겼어요"만 눌러 주세요 (보통 5~8번).\n시작할까요?')) return;
+  if (saveTimer) await saveNow();
+  const r = await api('/api/bisect', {cmd: 'start'});
+  if (!r.ok) { alert(r.error || '시작하지 못했어요'); return; }
+  $('bis').classList.remove('hidden'); bisPoll();
+}
+async function bisCmd(cmd) { const r = await api('/api/bisect', {cmd}); if (r && r.bisect) { BIS = r.bisect; BISN = r.names; renderBis(); } bisPoll(); }
+async function bisPoll() {
+  clearTimeout(bisTimer);
+  const r = await api('/api/bisect', {cmd: 'state'});
+  if (!r || !r.bisect) return;
+  BIS = r.bisect; BISN = r.names; renderBis();
+  if (BIS.active && BIS.phase === 'building') bisTimer = setTimeout(bisPoll, 700);
+}
+function renderBis() {
+  const b = BIS; if (!b || !b.active) { $('bis').classList.add('hidden'); return; }
+  const nm = id => esc(BISN[id] || id);
+  let h = `<h2>튕김 원인 찾기 · ${b.round}번째 시험</h2><div class="sub">남은 후보 ${b.cand.length}개 / 처음 ${b.total}개</div>`;
+  if (b.phase === 'building') h += `<div class="progress"><div class="bar"><i style="width:${b.percent}%"></i></div><div class="step">시험 스킨을 만들어 게임에 넣는 중... ${b.percent}%</div></div>`;
+  if (b.phase === 'waiting') h += `<p><b>게임을 켜 보세요.</b> 캐릭터 고르는 화면까지 들어가면 "켜졌어요"를 눌러 주세요. 게임을 끈 뒤에 눌러야 다음 시험 스킨을 넣을 수 있어요. 이 스킨 빌더 창은 끝날 때까지 켜 두세요.</p>
+    <div class="sub">이번 시험에 들어간 기능 ${b.testing.length}개</div><ul>${b.testing.map(id => `<li>${nm(id)}</li>`).join('')}</ul>
+    <div class="acts"><button class="btn good" onclick="bisCmd('ok')">✓ 켜졌어요</button><button class="btn badb" onclick="bisCmd('crash')">✗ 튕겼어요</button></div>`;
+  if (b.phase === 'error') h += `<p class="bad">${esc(b.error)}</p><div class="acts"><button class="btn" onclick="bisCmd('stop')">닫기</button></div>`;
+  if (b.phase === 'done') {
+    h += b.error ? `<p>${esc(b.error)}</p>` : '';
+    h += `<p>원인으로 보이는 기능: <b>${nm(b.result)}</b></p>`;
+    if (b.partners.length) h += `<div class="sub">이 기능은 아래 기능들 중 무언가와 같이 넣을 때만 튕겨요</div><ul>${b.partners.map(id => `<li>${nm(id)}</li>`).join('')}</ul>`;
+    h += `<div class="acts"><button class="btn good" onclick="bisDrop()">이 기능 빼고 다시 만들기</button><button class="btn" onclick="bisCmd('stop')">닫기 (그대로 두기)</button></div>
+      <div class="sub" style="margin-top:10px">지금 게임에는 마지막 시험 스킨이 들어 있어요. 닫기를 눌렀다면 첫 화면에서 다시 "스킨 만들어서 게임에 넣기"를 눌러 주세요.</div>`;
+  }
+  if (b.phase !== 'done' && b.phase !== 'error') h += `<div class="acts" style="justify-content:flex-end"><button class="linkbtn" onclick="if(confirm('원인 찾기를 그만할까요?'))bisCmd('stop')">그만하기</button></div>`;
+  $('bisBox').innerHTML = h; $('bis').classList.remove('hidden');
+}
+async function bisDrop() {
+  const id = BIS.result; S.choices[id] = ''; await saveNow();
+  await api('/api/bisect', {cmd: 'stop'}); $('bis').classList.add('hidden');
+  toast('"' + (BISN[id] || id) + '" 를 뺐어요. 다시 만들어요'); updateCounts(); startBuild();
+}
+
+
+// ---- 내 설정 저장·불러오기
+let PROFS = [];
+async function profList(r) {
+  r = r || await api('/api/profile', {cmd: 'list'});
+  PROFS = r.profiles || [];
+  PROFS.sort((a, b) => a.name.localeCompare(b.name));
+  $('profSel').innerHTML = PROFS.length ? PROFS.map(p => `<option value="${esc(p.name)}">${esc(p.name)} (${esc(p.saved)})</option>`).join('') : '<option value="">저장한 설정 없음</option>';
+}
+async function profSave() {
+  if (saveTimer) await saveNow();
+  const n = prompt('이 설정의 이름 (같은 이름이면 덮어써요)', $('profSel').value || '내 설정 1');
+  if (!n) return;
+  const r = await api('/api/profile', {cmd: 'save', name: n});
+  if (!r.ok) { alert(r.error); return; }
+  await profList(r); $('profSel').value = n; toast('"' + n + '" 저장했어요');
+}
+async function profCmd(cmd) {
+  const n = $('profSel').value; if (!n) return;
+  if (cmd === 'delete' && !confirm('"' + n + '" 설정을 지울까요?')) return;
+  if (cmd === 'load' && !confirm('"' + n + '" 설정을 불러올까요? 지금 고른 것은 바뀌어요 (먼저 저장해 두세요)')) return;
+  if (saveTimer) await saveNow();
+  const r = await api('/api/profile', {cmd, name: n});
+  if (!r.ok) { alert(r.error); return; }
+  if (cmd === 'load') { S = {choices: r.choices || {}, params: r.params || {}}; updateCounts(); renderHomeCheck(); toast('"' + n + '" 불러왔어요'); }
+  await profList(r);
+}
+// ---- 기준 스킨 새 버전 확인
+let DIFF = null;
+async function loadDiff() { DIFF = await api('/api/basediff', {}); renderHomeCheck(); }
+function renderHomeCheck() {
+  const c = $('diffCard'); if (!c || !P) return;
+  const bad = P.features.filter(f => S.choices[f.id] && STATUS[f.id] && STATUS[f.id][S.choices[f.id]] && STATUS[f.id][S.choices[f.id]].state === 'cant');
+  let h = '';
+  if (DIFF && DIFF.has) {
+    h += `<h3>기준 스킨이 지난번과 달라요</h3><div class="sub">지난번: ${esc(DIFF.prevMod)} · ${esc(DIFF.prevTime)}<br>${esc(DIFF.prevPath)}</div>
+      <p>새로 생긴 파일 <b>${DIFF.added}</b> · 바뀐 파일 <b>${DIFF.changed}</b> · 없어진 파일 <b>${DIFF.removed}</b></p>
+      <table><tr><th>묶음</th><th>새로</th><th>바뀜</th><th>없어짐</th><th>예</th></tr>${DIFF.groups.slice(0, 10).map(g => `<tr><td>${esc(g.name)}</td><td>${g.added || ''}</td><td>${g.changed || ''}</td><td>${g.removed || ''}</td><td class="sub">${g.samples.slice(0, 3).map(esc).join(', ')}</td></tr>`).join('')}</table>`;
+  }
+  const cmpDone = STATE && STATE.base && Object.keys(STATUS).length;
+  if (h || bad.length) {
+    if (!cmpDone) h += '<p class="sub">고른 기능이 새 스킨에 잘 얹히는지 확인하는 중...</p>';
+    else if (bad.length) h += `<p class="bad">이 기능은 지금 기준 스킨에 넣을 수 없어요 (넣어도 무시돼요):</p><ul>${bad.map(f => `<li>${esc(f.name)} — ${esc((STATUS[f.id][S.choices[f.id]].notes || []).join(' / '))}</li>`).join('')}</ul>`;
+    else h += '<p class="ok">✓ 고른 기능은 모두 이 기준 스킨에 그대로 얹을 수 있어요</p>';
+    if (DIFF && DIFF.has) h += '<p class="sub">"바뀐 파일"이 화면 배치(layouts)에 많으면, 만든 뒤 위치가 달라졌는지 게임에서 한번 봐 주세요. 튕기면 아래 "게임이 튕겨요 (원인 찾기)"를 쓰세요.</p><button class="linkbtn" onclick="api(\'/api/basediff\',{cmd:\'dismiss\'}).then(loadDiff)">확인했어요 (닫기)</button>';
+  }
+  c.innerHTML = h; c.classList.toggle('hidden', !h);
+}
+
+async function applyPatch() {
+  const r = await api('/api/patch', {});
+  if (!r || !r.ok) { if (r && r.error) alert(r.error); return; }
+  toast(`${r.version} 버전으로 업그레이드했어요. 프로그램을 다시 켜요...`);
+  setTimeout(() => location.reload(), 6000);
+}
+function resetAll() { if (!confirm('고른 기능을 모두 뺄까요?')) return; S.choices = {}; queueSave(); renderList(); }
+const FILTERS = [['mine', '내 기능'], ['sel', '고른 것'], ['all', '고급 (전체 388개)'], ['missing', '기준 스킨에 없는 것']];
+function renderFilters() {
+  $('filters').innerHTML = FILTERS.map(([k, l]) => `<button class="${FILTER === k ? 'on' : ''}" onclick="FILTER='${k}';renderFilters();renderList()">${l}</button>`).join('');
+}
+function featText(f) { return (f.name + ' ' + (f.easy || []).map(r => r[1]).join(' ') + ' ' + (f.desc || '') + ' ' + f.options.map(o => o.label).join(' ')).toLowerCase(); }
+function bestState(f) {
+  const s = STATUS[f.id]; if (!s) return '';
+  const st = Object.values(s).map(x => x.state);
+  if (st.includes('same')) return 'same';
+  return st[0] || '';
+}
+function filePaths(o) {
+  const out = [];
+  for (const op of o.ops) if (Array.isArray(op) && op[0] !== 'n') out.push(op[1].toLowerCase());
+  return out;
+}
+function conflicts() {
+  const owner = {}, res = {};
+  for (const f of P.features) {
+    const k = S.choices[f.id]; if (!k) continue;
+    const o = f.options.find(o => o.key === k); if (!o) continue;
+    for (const p of filePaths(o)) {
+      if (owner[p] && owner[p] !== f.id) { (res[f.id] = res[f.id] || {})[owner[p]] = ((res[f.id] || {})[owner[p]] || 0) + 1; }
+      owner[p] = f.id;
+    }
+  }
+  return res;
+}
+let CONF = {};
+function renderList(keepScroll) {
+  const list = $('list'), nav = $('nav'), y = list.scrollTop;
+  const q = $('q').value.trim().toLowerCase();
+  CONF = conflicts();
+  const groups = P.groups.map(g => ({g, items: []}));
+  const gi = Object.fromEntries(groups.map((x, i) => [x.g, i]));
+  for (const f of P.features) {
+    if (q && !featText(f).includes(q)) continue;
+    if (FILTER === 'mine' && !f.mine) continue;
+    if (FILTER === 'sel' && !S.choices[f.id]) continue;
+    if (FILTER === 'missing' && bestState(f) === 'same') continue;
+    groups[gi[f.group]].items.push(f);
+  }
+  let html = '', navHtml = '';
+  groups.forEach((x, i) => {
+    if (!x.items.length) return;
+    const n = x.items.filter(f => S.choices[f.id]).length;
+    navHtml += `<button onclick="document.getElementById('g${i}').scrollIntoView()">${esc(x.g)} <b class="${n ? 'sel' : ''}">${n ? n + ' / ' : ''}${x.items.length}</b></button>`;
+    html += `<div class="gtitle" id="g${i}">${esc(x.g)}</div>` + x.items.map(card).join('');
+  });
+  list.innerHTML = html || '<div class="empty">찾는 기능이 없어요</div>';
+  nav.innerHTML = navHtml;
+  if (keepScroll) list.scrollTop = y;
+  updateCounts();
+}
+const ST_TXT = {same: '✓ 이미 있음', new: '새로 더함', patch: '덧붙임', replace: '⚠ 바꿈', cant: '넣을 수 없음'};
+function stBadge(st) { return st ? `<span class="badge st-${st.state}">${ST_TXT[st.state]}${st.state === 'replace' ? ' ' + st.replace : ''}</span>` : ''; }
+function card(f) {
+  const idx = P.features.indexOf(f), cur = chosen(f), s = STATUS[f.id] || {};
+  const opts = [`<button class="none ${cur ? '' : 'on'}" onclick="pick(${idx},'')">넣지 않음</button>`]
+    .concat(f.options.map((o, oi) => {
+      const st = s[o.key];
+      const sub = st ? ST_TXT[st.state] + (st.state === 'replace' ? ` ${st.replace}개` : '') : (STATE.base ? '…' : '');
+      return `<button class="${cur === o.key ? 'on' : ''}" onclick="pick(${idx},${oi})">${esc(f.options.length === 1 ? '넣기' : o.label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
+    })).join('');
+  const easy = (f.easy || []).map(([k, v]) => {
+    const cls = (k === '버전별 차이' || k === '버전 비교') ? 'd' : (k === '중요' || k === '주의' || k === '함께 켜짐' ? 'w' : '');
+    return `<div class="k ${cls}">${esc(k)}</div><div>${esc(v)}</div>`;
+  }).join('');
+  const one = f.options.length === 1 ? s[f.options[0].key] : null;
+  let detail = '';
+  const ost = cur ? s[cur] : one;
+  if (ost) {
+    const parts = [];
+    if (ost.state === 'same') parts.push('<span class="ok">기준 스킨에 이미 똑같이 들어 있어요. 넣어도 바뀌는 게 없어요</span>');
+    if (ost.add) parts.push(`새 파일 ${ost.add}개를 더해요`);
+    if (ost.replace) parts.push(`<span class="w">기준 스킨 파일 ${ost.replace}개를 이 버전으로 바꿔요</span>${ost.replaced && ost.replaced.length ? ' <span class="sub">(' + ost.replaced.map(p => esc(p.split('\\').pop())).join(', ') + (ost.replace > ost.replaced.length ? ' …' : '') + ')</span>' : ''}`);
+    if (ost.remove) parts.push(`<span class="w">기준 스킨 파일 ${ost.remove}개를 빼서 게임 기본으로 돌려요</span>`);
+    for (const n of ost.notes || []) parts.push(ost.state === 'cant' ? `<span class="bad">${esc(n)}</span>` : esc(n));
+    if (parts.length && (cur || ost.state !== 'new')) detail = `<div class="detail">${parts.join('<br>')}</div>`;
+  }
+  if (cur && CONF[f.id]) detail += `<div class="detail"><span class="w">⚠ ${Object.entries(CONF[f.id]).map(([o, n]) => `"${esc(byId[o].name)}"과(와) 같은 파일 ${n}개`).join(', ')}를 바꿔요 — 목록에서 아래쪽에 있는 이 기능이 이겨요</span></div>`;
+  const params = cur && (f.params || []).length ? `<div class="params">${f.params.map(p => p.kind === 'text'
+    ? `<label>${esc(p.label)} <input value="${esc(param(p.id, p.default))}" maxlength="40" oninput="setParam('${p.id}', this.value)"></label>`
+    : p.kind === 'num'
+    ? `<label class="num">${esc(p.label)} <input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${esc(param(p.id, p.default))}" oninput="this.nextElementSibling.value=this.value;setParam('${p.id}', this.value)"><input type="number" min="${p.min}" max="${p.max}" step="${p.step}" value="${esc(param(p.id, p.default))}" oninput="this.previousElementSibling.value=this.value;setParam('${p.id}', this.value)"></label>`
+    : `<label>${esc(p.label)} <select onchange="setParam('${p.id}', this.value)">${p.choices.map(c => `<option ${param(p.id, p.default) === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>`).join('')}<button class="linkbtn" onclick="resetParams('${f.id}')">기본값으로</button></div>` : '';
+  const prev = (f.previews || []).length ? `<div class="prev">${f.previews.slice(0, 12).map(p => `<img src="${p.img}" title="${esc(p.name)}" loading="lazy">`).join('')}</div>` : '';
+  const lab = l => (f.labels && f.labels[l]) || l;
+  const shots = (f.shots || []).map(r => `<div class="srow"><div class="sfile">${esc(r.file)}</div><div class="scells">${
+    Object.entries(r.v).map(([l, v]) => `<div class="scell">${
+      v === 'empty' ? '<div class="ph">비어 있음<br>(이 버전은<br>안 보이게 함)</div>'
+      : v.startsWith('same:') ? `<div class="ph same">${esc(lab(v.slice(5)))}와<br>같은 그림</div>`
+      : `<img src="${v}" loading="lazy" onclick="zoom('${v}','${esc(r.file)} · ${esc(lab(l))}')">`
+    }<span class="lab">${esc(lab(l))}</span></div>`).join('')}</div></div>`).join('');
+  const sounds = (f.sounds || []).map(r => `<div class="srow"><div class="sfile">🔊 ${esc(r.file)}</div><div class="scells">${
+    Object.entries(r.v).map(([l, v]) => typeof v === 'number'
+      ? `<button class="play" onclick="playSnd(this,${v})">▶ ${esc(lab(l))}</button>`
+      : `<span class="sub" style="font-size:12.5px;padding:5px 4px">${esc(lab(l))}: ${v === 'empty' ? '소리 없음(꺼짐)' : esc(lab(v.slice(5))) + '와 같은 소리'}</span>`).join('')}</div></div>`).join('');
+  const media = (shots || sounds) ? `<div class="shots">${shots}${sounds}</div>` + fontsHtml(f) : fontsHtml(f);
+  const potion = f.kind === 'potion' ? potionTable(f, cur) : '';
+  const req = (f.requires || []).length ? `<span class="badge">필요: ${f.requires.map(r => esc(byId[r].name)).join(', ')}</span>` : '';
+  return `<div class="item ${cur ? 'sel' : ''}" id="it${idx}">
+    <div class="head"><span class="name">${esc(f.name)}</span>${one ? stBadge(one) : ''}${req}</div>
+    ${easy ? `<div class="easy">${easy}</div>` : (f.desc ? `<div class="sub">${esc(f.desc)}</div>` : '')}
+    ${potion}${media || prev}
+    <div class="opts">${opts}</div>${params}${detail}
+  </div>`;
+}
+function pick(idx, oi) {
+  const f = P.features[idx];
+  setChoice(f, oi === '' ? '' : f.options[oi].key);
+  renderList(true);
+}
+function setParam(id, v) { S.params[id] = v; queueSave(); }
+function zoom(src, cap) { $('lbImg').src = src; $('lbCap').textContent = cap; $('lb').classList.remove('hidden'); }
+const audio = new Audio(); let playingBtn = null;
+function playSnd(btn, i) {
+  if (playingBtn === btn && !audio.paused) { audio.pause(); btn.classList.remove('on'); playingBtn = null; return; }
+  if (playingBtn) playingBtn.classList.remove('on');
+  audio.src = '/api/sound?i=' + i; audio.play().catch(() => toast('이 소리는 재생할 수 없어요'));
+  btn.classList.add('on'); playingBtn = btn;
+}
+audio.addEventListener('ended', () => { if (playingBtn) playingBtn.classList.remove('on'); playingBtn = null; });
+const D2C = {'0': '#ffffff', '1': '#ff5050', '2': '#00e000', '3': '#7070ff', '4': '#c8b475', '5': '#8a8a8a', '6': '#444', '7': '#d4c27d', '8': '#ffa500', '9': '#ffff64', ':': '#00a000', ';': '#b44cff', '/': '#ffffff', '.': '#c8b475', '<': '#00e000'};
+function d2text(sv) {
+  let out = '', color = '#ffffff';
+  for (const p of String(sv || '').split(/(ÿc.)/)) {
+    if (/^ÿc.$/.test(p)) { color = D2C[p[2]] || '#ffffff'; continue; }
+    if (p) out += `<span style="color:${color}">${esc(p)}</span>`;
+  }
+  return out || '<span class="sub">(없음)</span>';
+}
+function potionTable(f, cur) {
+  const vers = Object.keys(f.potion_names);
+  const lab = l => (f.options.find(o => o.key === l) || {label: l}).label;
+  const head = `<tr><th>물약</th><th>그림</th>${vers.map(l => `<th class="${cur === l ? 'on' : ''}">${esc(lab(l))}</th>`).join('')}</tr>`;
+  const rows = f.potions.map(p => `<tr><td>${esc(p.kr)}</td><td>${p.img ? `<img src="img/pot_${p.key}.webp" onerror="this.remove()">` : '-'}</td>${vers.map(l => `<td class="${cur === l ? 'on' : ''}">${d2text(f.potion_names[l][p.key])}</td>`).join('')}</tr>`).join('');
+  return `<div style="overflow-x:auto"><table class="ptable">${head}${rows}</table></div>`;
+}
+const loadedFonts = new Set();
+function fontsHtml(f) {
+  if (!f.fonts) return '';
+  const lab = l => (f.labels && f.labels[l]) || l;
+  return f.fonts.map(r => `<div class="sfile">🔤 ${esc(r.file)}</div><div class="fontrow">${Object.entries(r.v).map(([l, b]) => {
+    if (!loadedFonts.has(b)) { loadedFonts.add(b); const ff = new FontFace('fb' + b, `url(/api/sound?i=${b})`); ff.load().then(x => document.fonts.add(x)).catch(() => {}); }
+    return `<div class="fontbox"><div class="lab">${esc(lab(l))}</div><div class="smp" style="font-family:'fb${b}', sans-serif">디아블로 2 레저렉션<br>Diablo II · 조던의 반지 0123</div></div>`;
+  }).join('')}</div>`).join('');
+}
+
+(async () => {
+  P = await (await fetch('/api/pack')).json();
+  P.features.forEach(f => byId[f.id] = f);
+  const st = await refresh();
+  S = {choices: st.settings.choices || {}, params: st.settings.params || {}};
+  renderHome();
+  bisPoll();
+  profList();
+  $('q').addEventListener('input', () => { clearTimeout(renderList.t); renderList.t = setTimeout(() => renderList(), 150); });
+  if (st.basePath && !st.base) { const w = async () => { const s = await refresh(); if (!s.base && !s.baseErr) setTimeout(w, 500); else pollStatus(); }; w(); }
+  else pollStatus();
+  setInterval(() => fetch('/api/ping').catch(() => {}), 5000);
+  fetch('/api/ping');
+  addEventListener('pagehide', () => navigator.sendBeacon('/api/bye'));
+})();
+</script>
+</body>
+</html>
