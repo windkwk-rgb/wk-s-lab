@@ -92,7 +92,7 @@ internal sealed partial class AdbHelper : IDisposable
         var (ok, output) = Run("devices -l");
         if (!ok) { Status = "adb 실행 실패"; UsbReady = false; return; }
 
-        // "serial  state  ... model:Lenovo_TB_X ..."
+        // "serial  state  ... model:Tablet_Model ..."
         var raw = new List<(string serial, string state, string model)>();
         foreach (var line in output.Split('\n'))
         {

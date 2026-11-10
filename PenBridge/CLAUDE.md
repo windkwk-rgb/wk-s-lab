@@ -23,6 +23,8 @@ AI 코딩 도우미(Claude 등)가 이 저장소에서 작업할 때 먼저 읽�
 5. `build.ps1`은 **UTF‑8 BOM + CRLF**로 저장 (Windows PowerShell 5.1이 한글을 깨뜨리지 않게).
 6. 노트북 UI는 `windows/ui/index.html` 한 파일 (QR 라이브러리는 `qrcode.js`, 실행 시 `<!--QRLIB-->` 자리에 끼워 넣음).
    브라우저에서 바로 열면 가짜 상태로 미리보기가 됨 (`#home`, `#share`, `#keys`, `#pen`, `#devices`, `#update`, `#settings`, `#idle`).
+7. **공개 저장소예요.** 미리보기 가짜 데이터·스크린샷·문서에 실제 정보를 넣지 말 것:
+   사용자 PC 이름·경로(`C:\Users\…`), 실제 IP, PIN, 태블릿 일련번호·모델, 이메일. 예시는 `192.168.0.10`, PIN `0000`, `demo-serial-01`처럼.
 
 ## 빌드
 
