@@ -7,200 +7,228 @@
 <link rel="icon" href="icon.png">
 <style>
 :root {
-  --bg: #111317; --panel: #1a1d23; --panel2: #22262e; --line: #2e333d; --text: #e9ecf1; --dim: #99a1ae;
-  --gold: #d9b45a; --green: #3fae6a; --green2: #2f8f55; --red: #e0675b; --blue: #5b9ae0; --warn: #f0a35b;
+  --bg: #0e0d0b; --bar: #13110e; --panel: #1a1814; --panel2: #221f19; --line: #2b2721; --line2: #3a352c;
+  --text: #ede6d6; --dim: #a49c8c; --dim2: #6e675b; --gold: #c8a35a; --gold2: #e2c27a; --gold3: #f3dca0;
+  --sel: #2a2418; --red: #b8452f; --ok: #9fd8a4; --okbg: #1e2a1f; --blue: #8ec5ff; --bluebg: #1d2b3a;
+  --warn: #f2b866; --warnbg: #3b2a12; --bad: #f0a99c; --badbg: #3a1a16;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif; }
-button { font: inherit; color: inherit; cursor: pointer; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--gold2); }
 .hidden { display: none !important; }
-.home { max-width: 780px; margin: 0 auto; padding: 32px 20px 60px; }
-.brand { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
-.brand h1 { margin: 0; font-size: 24px; color: var(--gold); letter-spacing: .5px; }
-.brand span { color: var(--dim); font-size: 13px; }
-.lead { color: var(--dim); font-size: 14px; margin: 0 0 22px; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
-.card .row { display: flex; align-items: center; gap: 14px; }
-.card .num { width: 30px; height: 30px; border-radius: 50%; background: var(--panel2); color: var(--gold); display: grid; place-items: center; font-weight: 700; flex: none; }
-.card .body { flex: 1; min-width: 0; }
-.card .title { font-weight: 700; font-size: 16px; }
-.sub { color: var(--dim); font-size: 13.5px; word-break: break-all; }
-.sub.ok { color: #8fd6a8; } .sub.bad { color: var(--warn); }
-.btn { background: var(--panel2); border: 1px solid var(--line); border-radius: 9px; padding: 8px 14px; white-space: nowrap; }
-.btn:hover { border-color: #4a515e; }
-.btn.small { padding: 5px 10px; font-size: 13px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0 44px; }
-.chip { background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; padding: 3px 12px; font-size: 13px; }
-.chip.on { border-color: var(--blue); color: #cfe2ff; }
-button.chip:hover { border-color: #4a515e; }
-.big { width: 100%; margin-top: 8px; padding: 18px; border: 0; border-radius: 14px; background: var(--green); font-size: 19px; font-weight: 700; color: #fff; }
-.big:hover { background: #46bb74; }
-.big:disabled { background: #3a3f48; color: var(--dim); cursor: default; }
-.progress { margin-top: 14px; }
-.bar { height: 10px; background: var(--panel2); border-radius: 6px; overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: var(--green); transition: width .2s; }
-.progress .step { color: var(--dim); font-size: 13.5px; margin-top: 6px; }
-.result { margin-top: 14px; border-radius: 14px; padding: 18px 20px; }
-.result.ok { background: #16281e; border: 1px solid #2c5a3d; }
-.result.err { background: #2c1a19; border: 1px solid #6b3430; }
-.result h3 { margin: 0 0 8px; font-size: 17px; }
-.result p { margin: 6px 0; }
-.code { display: inline-flex; align-items: center; gap: 8px; background: #0c0e11; border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px 4px 12px; font-family: Consolas, monospace; font-size: 15px; color: #fff; }
-.steps { margin: 8px 0 0; padding-left: 20px; color: #cfd6e0; }
-.foot { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.linkbtn { background: none; border: 0; color: var(--dim); font-size: 13px; text-decoration: underline; }
-details.log { margin-top: 8px; } details.log pre { white-space: pre-wrap; font-size: 12px; color: #b9c0cc; max-height: 260px; overflow: auto; background: #0c0e11; padding: 8px; border-radius: 8px; }
+.sub { color: var(--dim); font-size: 13.5px; }
+.ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+.btn { height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: #5a5244; }
+.btn.small { height: 32px; padding: 0 10px; font-size: 13px; }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: #1a1408; font-weight: 700; }
+.btn.red { background: var(--red); border-color: var(--red); color: #fff6ea; font-weight: 700; }
+.btn:disabled { opacity: .5; cursor: default; }
+.linkbtn { background: none; border: 0; color: var(--gold2); font-size: 13px; padding: 0; text-decoration: underline; }
+.badge { font-size: 11.5px; padding: 2px 8px; border-radius: 6px; white-space: nowrap; background: var(--panel2); color: var(--dim); }
+.st-same { background: var(--okbg); color: var(--ok); }
+.st-new { background: var(--okbg); color: var(--ok); }
+.st-patch { background: var(--bluebg); color: var(--blue); }
+.st-replace { background: var(--warnbg); color: var(--warn); }
+.st-cant { background: var(--badbg); color: var(--bad); }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #2b2721; border: 1px solid var(--line2); padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 60; max-width: 90vw; }
+.logo { width: 34px; height: 34px; border-radius: 8px; background: #3a1712; border: 1px solid var(--gold); display: grid; place-items: center; color: var(--gold2); font-weight: 900; font-family: Georgia, serif; }
+header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 24px; background: var(--bar); border-bottom: 1px solid var(--line); }
+header.top .grow { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 200px; }
 
+/* ---------- 홈 */
+.status { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 24px; background: var(--bar); border-bottom: 1px solid var(--line); }
+.stat { flex: 1 1 260px; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--dim2); }
+.dot.on { background: #6fcf7a; } .dot.mid { background: var(--gold2); } .dot.off { background: #e5484d; }
+.stat .t { flex: 1; min-width: 0; } .stat .k { font-size: 12px; color: var(--dim); }
+.stat .v { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.homemain { display: flex; flex-wrap: wrap; gap: 24px; padding: 26px 24px 40px; max-width: 1280px; margin: 0 auto; }
+.homemain > section { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.homemain > aside { flex: 1 1 320px; display: flex; flex-direction: column; gap: 14px; }
+h1.big { margin: 0; font-size: 24px; font-weight: 900; }
+.recipes { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.recipe { padding: 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.recipe.cur { background: #1f1a12; border: 2px solid var(--gold); }
+.recipe.prof { border-style: dashed; border-color: #4a443a; }
+.recipe .n { font-size: 17px; font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.recipe .tag { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1a1408; font-weight: 700; }
+.recipe .d { color: #cfc6b4; font-size: 13.5px; line-height: 1.6; flex: 1; }
+.recipe .f { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.card { padding: 18px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.card h3 { margin: 0; font-size: 15px; }
+.bigbtn { min-height: 72px; border-radius: 14px; border: 0; background: var(--red); color: #fff6ea; font-size: 19px; font-weight: 900; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.bigbtn span { font-size: 13px; font-weight: 400; color: #f4d3c6; }
+.bigbtn:disabled { background: #3a352c; color: var(--dim); cursor: default; } .bigbtn:disabled span { color: var(--dim); }
+.chk { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.chk i { width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 700; }
+.chk i.y { background: var(--okbg); color: var(--ok); } .chk i.n { background: var(--warnbg); color: var(--warn); }
+.rowlink { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 14px; border-radius: 10px; background: var(--panel2); border: 0; text-align: left; }
+.rowlink span { color: var(--dim); font-size: 13px; }
+.bar { height: 10px; background: var(--panel2); border-radius: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .2s; }
+.result { border-radius: 14px; padding: 16px 18px; }
+.result.okr { background: #16281e; border: 1px solid #2c5a3d; } .result.err { background: #2c1a19; border: 1px solid #6b3430; }
+.result h3 { margin: 0 0 6px; } .result p { margin: 6px 0; }
+.code { display: inline-flex; align-items: center; gap: 8px; background: #0a0908; border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px 4px 12px; font-family: Consolas, monospace; }
+.steps { margin: 8px 0 0; padding-left: 20px; color: #cfc6b4; }
+details.log pre { white-space: pre-wrap; font-size: 12px; color: #b9b2a2; max-height: 240px; overflow: auto; background: #0a0908; padding: 8px; border-radius: 8px; }
+#diffCard table { border-collapse: collapse; font-size: 13px; } #diffCard td, #diffCard th { padding: 3px 8px; border-bottom: 1px solid var(--line); text-align: left; } #diffCard th { color: var(--dim); font-weight: 400; }
+
+/* ---------- 고르기 */
 .editor { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg); }
-.topbar { display: flex; gap: 10px; align-items: center; padding: 12px 18px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.topbar input { flex: 1; min-width: 160px; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; color: var(--text); font: inherit; }
-.topbar .changed { color: var(--gold); font-size: 13.5px; white-space: nowrap; }
-.filters { display: flex; gap: 6px; }
-.filters button { background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; padding: 5px 12px; font-size: 13px; }
-.filters button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
-.cmpbar { padding: 6px 18px; font-size: 13px; color: var(--dim); background: #15181d; border-bottom: 1px solid var(--line); }
-.split { flex: 1; display: flex; min-height: 0; }
-nav { width: 260px; flex: none; overflow: auto; border-right: 1px solid var(--line); padding: 10px 8px; }
-nav button { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 8px; padding: 8px 10px; color: var(--dim); font-size: 13.5px; }
-nav button:hover { background: var(--panel); color: var(--text); }
-nav button b { float: right; font-weight: 400; color: #6d7582; }
-nav button b.sel { color: var(--gold); }
-.list { flex: 1; overflow: auto; padding: 16px 22px 60px; }
-.gtitle { font-size: 17px; font-weight: 700; color: var(--gold); margin: 22px 0 10px; }
-.gtitle:first-child { margin-top: 0; }
-.item { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-.item.sel { border-color: #2d5577; box-shadow: inset 3px 0 0 var(--blue); }
-.item .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.item .name { font-weight: 700; }
-.badge { font-size: 11.5px; padding: 1px 8px; border-radius: 20px; background: var(--panel2); color: var(--dim); border: 1px solid var(--line); white-space: nowrap; }
-.st-same { background: #1c2a22; color: #8fd6a8; border-color: #2c5a3d; }
-.st-new { background: #1d2f3f; color: #7fc4ff; border-color: #2d5577; }
-.st-patch { background: #1d2f3f; color: #7fc4ff; border-color: #2d5577; }
-.st-replace { background: #3a3120; color: var(--gold); border-color: #6b5a2c; }
-.st-cant { background: #2c1a19; color: var(--red); border-color: #6b3430; }
-.easy { display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; margin: 8px 0 10px; font-size: 13.5px; }
-.easy .k { color: var(--dim); white-space: nowrap; }
-.easy .k.d { color: #7fc4ff; } .easy .k.w { color: var(--warn); }
+.search { flex: 1 1 260px; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line2); }
+.search input { flex: 1; background: transparent; border: 0; outline: none; color: var(--text); min-width: 80px; }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+.seg button { height: 32px; padding: 0 12px; border-radius: 7px; border: 0; background: transparent; color: #cfc6b4; font-size: 13px; }
+.seg button.on { background: var(--gold); color: #1a1408; font-weight: 700; }
+.cmpbar { padding: 6px 24px; font-size: 13px; color: var(--dim); background: #12100d; border-bottom: 1px solid var(--line); }
+.work { flex: 1; display: flex; min-height: 0; }
+nav.goals { width: 236px; flex: none; overflow: auto; padding: 14px 10px; border-right: 1px solid var(--line); background: #12100d; display: flex; flex-direction: column; gap: 2px; }
+nav.goals .hd { font-size: 12px; color: var(--dim); padding: 2px 10px 8px; }
+nav.goals button { display: flex; justify-content: space-between; gap: 6px; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; border: 0; background: none; color: var(--text); }
+nav.goals button b { font-weight: 400; color: var(--dim); }
+nav.goals button.on { background: var(--sel); color: var(--gold3); font-weight: 700; } nav.goals button.on b { color: var(--gold3); }
+nav.goals hr { border: 0; height: 1px; background: var(--line); margin: 8px 4px; }
+.flist { width: 440px; flex: none; overflow: auto; padding: 16px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.work.list-only .flist { flex: 1; width: auto; border-right: 0; } .work.list-only .side { display: none; }
+.work.big .flist { width: 340px; } .work.big nav.goals { display: none; }
+.ghead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; } .ghead h2 { margin: 0; font-size: 19px; }
+.frow { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); text-align: left; width: 100%; }
+.frow.cur { background: #221d14; border-color: var(--gold); }
+.frow .nm { flex: 1; min-width: 0; } .frow .nm b { display: block; font-weight: 700; } .frow .nm small { display: block; color: var(--dim); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sw { width: 44px; height: 26px; border-radius: 13px; background: var(--line2); border: 0; padding: 0; position: relative; flex: none; }
+.sw::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #8a8273; transition: left .15s; }
+.sw.on { background: var(--gold); } .sw.on::after { left: 21px; background: #1a1408; }
+.cdot { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+details.adv { margin-top: 8px; } details.adv summary { cursor: pointer; color: var(--dim); font-size: 13.5px; padding: 6px 2px; }
+details.adv .frow { margin-top: 8px; }
+.empty { text-align: center; color: var(--dim); padding: 40px 10px; }
+.side { flex: 1; min-width: 0; min-height: 0; overflow: auto; padding: 16px; background: var(--bar); display: flex; flex-direction: column; gap: 12px; }
+.side > * { flex: none; }
+.pv { position: relative; flex: none; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: radial-gradient(ellipse at 50% 55%, #3a3426 0%, #1c1a15 60%, #110f0c 100%); border: 1px solid var(--line); user-select: none; touch-action: none; }
+.pv .lay { position: absolute; border: 1px dashed; border-radius: 3px; }
+.pv .lay.cur { border-style: solid; border-width: 2px; cursor: move; }
+.pv .lay .h { position: absolute; right: -6px; bottom: -6px; width: 11px; height: 11px; border-radius: 2px; cursor: nwse-resize; }
+.pv .tag { position: absolute; left: 0; top: -22px; padding: 1px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; color: #1a1408; white-space: nowrap; }
+.pv .txt { position: absolute; font-size: 11px; line-height: 1.45; white-space: nowrap; pointer-events: none; }
+.pv .hud { position: absolute; left: 0; right: 0; bottom: 0; height: 15%; background: #15130f; border-top: 1px solid var(--line2); }
+.pv .orb { position: absolute; bottom: 10%; width: 9%; aspect-ratio: 1; border-radius: 50%; }
+.pvnote { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--dim); }
+.dhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .dhead h3 { margin: 0; font-size: 17px; flex: 1; }
 .opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.opts button { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 13.5px; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.3; }
+.opts button { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); display: flex; flex-direction: column; align-items: flex-start; line-height: 1.3; font-size: 13.5px; }
 .opts button small { font-size: 11px; color: var(--dim); }
-.opts button.on { background: var(--blue); border-color: var(--blue); color: #fff; }
-.opts button.on small { color: #dce9ff; }
-.opts button.none.on { background: #4a4f58; border-color: #4a4f58; }
-.detail { margin-top: 8px; font-size: 13px; background: #15181d; border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; }
-.detail .w { color: var(--warn); } .detail .ok { color: #8fd6a8; } .detail .bad { color: var(--red); }
-.params { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; }
-.params label { font-size: 13px; color: var(--dim); display: flex; align-items: center; gap: 6px; }
-.params label.num input[type=number] { width: 70px; }
-.params label.num input[type=range] { width: 140px; padding: 0; }
-.params select, .params input { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; color: var(--text); font: inherit; font-size: 13.5px; }
-.prev { display: flex; gap: 6px; margin: 4px 0 10px; flex-wrap: wrap; }
-.prev img { width: 54px; height: 54px; object-fit: contain; background: #0c0e11; border-radius: 6px; border: 1px solid var(--line); }
-.shots { margin: 2px 0 12px; display: flex; flex-direction: column; gap: 8px; }
-.srow { background: #15181d; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
-.sfile { font-size: 11.5px; color: #6d7582; margin-bottom: 6px; word-break: break-all; }
+.opts button.on { background: var(--gold); border-color: var(--gold); color: #1a1408; font-weight: 700; } .opts button.on small { color: #3a2e10; }
+.params { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px 14px; }
+.params label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--dim); }
+.params .ctl { display: flex; gap: 8px; align-items: center; }
+.params input[type=range] { flex: 1; accent-color: var(--gold); }
+.params input[type=number], .params input[type=text], .params select { height: 34px; border-radius: 6px; border: 1px solid var(--line2); background: var(--panel); color: var(--text); padding: 0 8px; font-size: 14px; }
+.params input[type=number] { width: 76px; text-align: center; }
+.easy { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; font-size: 13.5px; background: var(--panel); border-radius: 10px; padding: 12px 14px; }
+.easy .k { color: var(--dim); white-space: nowrap; } .easy .k.w { color: var(--warn); }
+.detail { font-size: 13px; background: var(--panel); border-radius: 10px; padding: 10px 12px; line-height: 1.6; }
+.shots { display: flex; flex-direction: column; gap: 8px; }
+.srow { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.sfile { font-size: 11.5px; color: var(--dim2); margin-bottom: 6px; word-break: break-all; }
 .scells { display: flex; gap: 10px; flex-wrap: wrap; }
 .scell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 96px; }
 .scell .lab { font-size: 12px; color: var(--dim); max-width: 150px; text-align: center; }
-.scell img { height: 92px; max-width: 150px; object-fit: contain; border-radius: 6px; cursor: zoom-in; background: repeating-conic-gradient(#23272e 0% 25%, #1b1e24 0% 50%) 50% / 14px 14px; }
-.scell .ph { height: 92px; width: 96px; display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--warn); border: 1px dashed #4a4f58; border-radius: 6px; padding: 4px; }
+.scell img { height: 92px; max-width: 150px; object-fit: contain; border-radius: 6px; cursor: zoom-in; background: repeating-conic-gradient(#23201a 0% 25%, #1a1814 0% 50%) 50% / 14px 14px; }
+.scell .ph { height: 92px; width: 96px; display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--warn); border: 1px dashed #4a443a; border-radius: 6px; padding: 4px; }
 .scell .ph.same { color: var(--dim); }
-.play { background: var(--panel2); border: 1px solid var(--line); border-radius: 20px; padding: 5px 14px; font-size: 13px; }
-.play.on { background: var(--green2); border-color: var(--green2); color: #fff; }
+.play { background: var(--panel2); border: 1px solid var(--line2); border-radius: 20px; padding: 5px 14px; font-size: 13px; }
+.play.on { background: #2e5a34; border-color: #2e5a34; }
+.prev { display: flex; gap: 6px; flex-wrap: wrap; } .prev img { width: 54px; height: 54px; object-fit: contain; background: #0a0908; border-radius: 6px; border: 1px solid var(--line); }
+.ptable { border-collapse: collapse; font-size: 13px; background: #0a0908; border-radius: 8px; overflow: hidden; }
+.ptable th, .ptable td { padding: 4px 10px; border-bottom: 1px solid #1f1c17; text-align: left; white-space: nowrap; }
+.ptable th { color: var(--dim); font-weight: 400; } .ptable .on { background: #2a2418; } .ptable img { height: 30px; vertical-align: middle; }
+.fontrow { display: flex; gap: 12px; flex-wrap: wrap; }
+.fontbox { background: #0a0908; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 240px; }
+.fontbox .smp { font-size: 22px; line-height: 1.4; color: #e9dcb5; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.72); display: grid; place-items: center; z-index: 55; }
+.modal .box { background: var(--panel); border: 1px solid var(--line2); border-radius: 14px; padding: 22px 24px; width: min(640px, 92vw); max-height: 86vh; overflow: auto; }
+.modal h2 { margin: 0 0 6px; font-size: 19px; }
+.modal ul { margin: 6px 0 14px; padding-left: 20px; font-size: 13.5px; color: var(--dim); max-height: 220px; overflow: auto; }
+.acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: grid; place-items: center; z-index: 50; cursor: zoom-out; }
-.lightbox img { width: min(520px, 90vw); max-height: 80vh; object-fit: contain; background: repeating-conic-gradient(#23272e 0% 25%, #1b1e24 0% 50%) 50% / 20px 20px; }
+.lightbox img { width: min(520px, 90vw); max-height: 80vh; object-fit: contain; }
 .lightbox div { color: #ddd; margin-top: 10px; text-align: center; }
-.ptable { border-collapse: collapse; margin: 6px 0 12px; font-size: 13px; background: #0c0e11; border-radius: 8px; overflow: hidden; }
-.ptable th, .ptable td { padding: 4px 10px; border-bottom: 1px solid #1f232a; text-align: left; white-space: nowrap; }
-.ptable th { color: var(--dim); font-weight: 400; background: #15181d; }
-.ptable td.on, .ptable th.on { background: #18263a; }
-.ptable img { height: 30px; vertical-align: middle; }
-.fontrow { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 12px; }
-.fontbox { background: #0c0e11; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 260px; }
-.fontbox .lab { font-size: 12px; color: var(--dim); } .fontbox .smp { font-size: 22px; line-height: 1.4; color: #e9dcb5; }
-.empty { text-align: center; color: var(--dim); padding: 50px; }
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #2b3038; border: 1px solid var(--line); padding: 10px 18px; border-radius: 10px; font-size: 14px; z-index: 60; }
-.profrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
-.profrow select { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; color: var(--text); font: inherit; font-size: 13.5px; min-width: 160px; }
-#diffCard h3 { margin: 0 0 6px; font-size: 16px; } #diffCard table { border-collapse: collapse; font-size: 13px; margin: 6px 0; }
-#diffCard td, #diffCard th { padding: 3px 10px; border-bottom: 1px solid var(--line); text-align: left; } #diffCard th { color: var(--dim); font-weight: 400; white-space: nowrap; }
-.bis { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: grid; place-items: center; z-index: 55; }
-.bis .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; width: min(640px, 92vw); max-height: 86vh; overflow: auto; }
-.bis h2 { margin: 0 0 6px; font-size: 19px; } .bis .sub { margin-bottom: 12px; }
-.bis ul { margin: 6px 0 14px; padding-left: 20px; font-size: 13.5px; color: var(--dim); max-height: 220px; overflow: auto; }
-.bis .acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-.bis .good { background: var(--green2); border-color: var(--green2); color: #fff; } .bis .badb { background: #8a2c2c; border-color: #8a2c2c; color: #fff; }
-@media (max-width: 760px) { nav { display: none; } .list { padding: 12px; } .chips { margin-left: 0; } }
+.mlist { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+@media (max-width: 1100px) { .flist { width: 360px; } }
+@media (max-width: 820px) {
+  nav.goals { display: none; } .work { flex-direction: column; overflow: auto; }
+  .flist, .work.big .flist { width: auto; border-right: 0; overflow: visible; } .side { overflow: visible; }
+}
 </style>
 </head>
 <body>
 
-<div class="home" id="home">
-  <div class="brand"><h1>D2R 스킨 빌더</h1><span id="ver"></span></div>
-  <p class="lead">내가 쓰는 스킨(mpq)을 그대로 두고, 원하는 기능만 골라 얹어서 새 스킨을 만들어요. 원래 스킨 파일은 바뀌지 않아요.</p>
-
-  <div class="card">
-    <div class="row">
-      <div class="num">1</div>
-      <div class="body"><div class="title">게임 폴더</div><div class="sub" id="gameSub">찾는 중...</div></div>
-      <button class="btn" onclick="pickGame()">폴더 고르기</button>
-    </div>
+<!-- ================= 홈 ================= -->
+<div id="home">
+  <header class="top">
+    <div class="grow"><div class="logo">D2</div><b style="font-size:18px">D2R 스킨 빌더</b><span class="sub" id="ver"></span></div>
+    <button class="btn" onclick="applyPatch()" title="제가 보내 드린 최신 skinbuilder.mpq 나 패치 파일을 넣으면 프로그램이 새 버전이 돼요">업그레이드</button>
+  </header>
+  <div class="status">
+    <div class="stat"><div class="dot" id="gDot"></div><div class="t"><div class="k">게임 폴더</div><div class="v" id="gameSub">찾는 중...</div></div><button class="linkbtn" onclick="pickGame()">바꾸기</button></div>
+    <div class="stat"><div class="dot" id="bDot"></div><div class="t"><div class="k">기준 스킨 (기능을 얹을 스킨)</div><div class="v" id="baseSub"></div></div><button class="linkbtn" onclick="openBaseModal()">바꾸기</button></div>
+    <div class="stat"><div class="dot" id="iDot"></div><div class="t"><div class="k">게임에 넣은 스킨</div><div class="v" id="instSub"></div></div><button class="linkbtn" id="copyCmdBtn" onclick="copyCmd('-mod ' + STATE.modName)">실행 옵션 복사</button></div>
   </div>
-
-  <div class="card">
-    <div class="row">
-      <div class="num">2</div>
-      <div class="body"><div class="title">기준 스킨</div><div class="sub" id="baseSub"></div></div>
-      <button class="btn" onclick="pickBase('')">mpq 파일 고르기</button>
-    </div>
-    <div class="chips" id="modChips"></div>
-  </div>
-
-  <div class="card">
-    <div class="row">
-      <div class="num">3</div>
-      <div class="body"><div class="title">덧붙일 기능</div><div class="sub" id="featSub"></div></div>
-      <button class="btn" onclick="openEditor()">기능 고르기</button>
-    </div>
-    <div class="chips" id="selChips"></div>
-    <div class="profrow"><span class="sub">내 설정</span><select id="profSel"></select>
-      <button class="btn small" onclick="profCmd('load')">불러오기</button>
-      <button class="btn small" onclick="profSave()">지금 설정 저장</button>
-      <button class="linkbtn" onclick="profCmd('delete')">지우기</button></div>
-  </div>
-  <div class="card hidden" id="diffCard"></div>
-
-  <button class="big" id="buildBtn" onclick="startBuild()">스킨 만들어서 게임에 넣기</button>
-  <div class="progress hidden" id="prog"><div class="bar"><i id="barFill"></i></div><div class="step" id="stepTxt"></div></div>
-  <div class="result hidden" id="result"></div>
-
-  <div class="foot">
-    <button class="linkbtn" onclick="api('/api/open',{})">만든 스킨 파일이 있는 폴더 열기</button>
-    <button class="linkbtn" id="uninstBtn" onclick="uninstall()">게임에서 만든 스킨 빼기</button>
-    <button class="linkbtn" onclick="startBisect()">게임이 튕겨요 (원인 찾기)</button>
-    <button class="linkbtn" onclick="applyPatch()">최신 mpq / 패치 파일 넣기 (업그레이드)</button>
+  <div class="homemain">
+    <section>
+      <div><h1 class="big">어떤 스킨으로 할까요?</h1><div class="sub" style="margin-top:4px">레시피를 고르면 필요한 기능이 한 번에 켜져요. 고른 뒤 하나씩 더하거나 뺄 수 있어요.</div></div>
+      <div class="recipes" id="recipes"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <button class="btn" style="height:48px;padding:0 20px" onclick="openEditor()">기능 하나씩 고르기</button>
+        <button class="btn" onclick="profSave()">지금 설정을 내 설정으로 저장</button>
+        <span class="sub" id="featSub"></span>
+      </div>
+    </section>
+    <aside>
+      <button class="bigbtn" id="buildBtn" onclick="startBuild()">스킨 만들어서 게임에 넣기<span id="buildSub"></span></button>
+      <div class="hidden" id="prog"><div class="bar"><i id="barFill"></i></div><div class="sub" id="stepTxt" style="margin-top:6px"></div></div>
+      <div class="result hidden" id="result"></div>
+      <div class="card" id="checkCard"></div>
+      <div class="card hidden" id="diffCard"></div>
+      <div class="card">
+        <h3>문제가 생겼을 때</h3>
+        <button class="rowlink" onclick="startBisect()">게임이 튕겨요 <span>원인 찾기 →</span></button>
+        <button class="rowlink" id="uninstBtn" onclick="uninstall()">원래 스킨으로 돌아가기 <span>만든 스킨 빼기 →</span></button>
+        <button class="rowlink" onclick="api('/api/open',{})">만든 스킨 파일 보기 <span>폴더 열기 →</span></button>
+      </div>
+    </aside>
   </div>
 </div>
 
+<!-- ================= 기능 고르기 ================= -->
 <div class="editor hidden" id="editor">
-  <div class="topbar">
-    <button class="btn" onclick="closeEditor()">← 다 골랐어요</button>
-    <input id="q" placeholder="찾기 (예: 큐브, 로비, 화살표, 물약, 룬, 소리)">
-    <div class="filters" id="filters"></div>
-    <span class="changed" id="chgCount"></span>
-    <button class="btn small" onclick="applyPreset()">추천대로 고르기</button>
-    <button class="btn small" onclick="resetAll()">모두 빼기</button>
-  </div>
+  <header class="top">
+    <button class="btn" onclick="closeEditor()">← 홈</button>
+    <label class="search"><span class="sub">찾기</span><input id="q" placeholder="큐브, 미니맵, 화살표, 룬, 물약, 소리…"></label>
+    <div class="seg" id="viewSeg"></div>
+    <div class="seg" id="filterSeg"></div>
+    <button class="btn red" onclick="closeEditor();startBuild()" id="edBuild">만들기</button>
+  </header>
   <div class="cmpbar" id="cmpbar"></div>
-  <div class="split"><nav id="nav"></nav><div class="list" id="list"></div></div>
+  <div class="work" id="work">
+    <nav class="goals" id="goals"></nav>
+    <div class="flist" id="flist"></div>
+    <div class="side" id="side"></div>
+  </div>
 </div>
 
 <div class="toast hidden" id="toast"></div>
-<div class="bis hidden" id="bis"><div class="box" id="bisBox"></div></div>
-<div class="lightbox hidden" id="lb" onclick="this.classList.add('hidden')"><div><img id="lbImg"><div id="lbCap"></div></div></div>
+<div class="modal hidden" id="bis"><div class="box" id="bisBox"></div></div>
+<div class="modal hidden" id="baseModal"><div class="box" id="baseBox"></div></div>
+<div class="lightbox hidden" id="lb" onclick="this.classList.add('hidden')"><div><img id="lbImg" alt=""><div id="lbCap"></div></div></div>
 
 <script>
-let P = null, S = {choices: {}, params: {}}, STATE = null, STATUS = {}, saveTimer = null, FILTER = 'mine';
+let P = null, S = {choices: {}, params: {}}, STATE = null, STATUS = {}, saveTimer = null;
+let GOAL = 'top', FILTER = 'all', VIEW = 'both', SELF = null, PROFS = [];
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const byId = {};
@@ -208,51 +236,127 @@ async function api(url, body) {
   const r = await fetch(url, body === undefined ? {cache: 'no-store'} : {method: 'POST', body: JSON.stringify(body)});
   return r.json();
 }
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 2600); }
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 2800); }
 function mb(n) { return (n / 1048576).toFixed(0) + 'MB'; }
+try { VIEW = localStorage.getItem('sbView') || 'both'; } catch (e) {}
 
-// ---------- 설정
+// ================= 목적별 분류 =================
+// 기능 묶음의 group 과 id 로 "무엇을 하고 싶나요?" 탭을 정해요
+const GOALS = [
+  ['top', '자주 쓰는 기능'], ['map', '지도 · 길찾기'], ['mon', '몬스터 · 전투 정보'], ['inv', '인벤 · 큐브 · 창고'],
+  ['hud', '화면 배치 (HUD)'], ['room', '방 만들기 · 사망 탈출'], ['item', '아이템 · 룬 · 물약'], ['fx', '스킬 아이콘 · 효과'],
+  ['snd', '소리 · 글자'], ['etc', '기타'],
+];
+const GOAL_ID = {
+  mini_map: 'map', beacon_next: 'map', exit_band: 'map', chaos_bridge_ox: 'map',
+  monster_mods: 'mon', lightning_glow: 'mon',
+  cube_farming: 'inv', bank_cube: 'inv', vendor_cube: 'inv', merc_cube: 'inv', esc_dictionary: 'inv',
+  inv_routes: 'inv', inv_goods: 'inv', inv_herald: 'inv', quest_guide: 'inv',
+  my_level_xp: 'hud', party_levels: 'hud', buff_icons: 'hud', exp_rainbow: 'hud',
+  lobby_difficulty: 'room', esc_quick: 'room', quick_lobby: 'room', death_exit: 'room', title_text: 'room',
+  defiler_skin: 'fx', potion_names: 'item',
+};
+function goalOf(f) {
+  if (GOAL_ID[f.id]) return GOAL_ID[f.id];
+  if (f.id.startsWith('arrows_')) return 'map';
+  const g = f.group || '';
+  if (g.startsWith('①')) return 'item';
+  if (g.startsWith('②')) return 'inv';
+  if (g.startsWith('③') || g.startsWith('⑤')) return 'map';
+  if (g.startsWith('④')) return 'mon';
+  if (g.startsWith('⑥')) return 'fx';
+  if (g.startsWith('⑦')) return 'hud';
+  if (g.startsWith('⑧') || g.startsWith('⑨')) return 'snd';
+  return 'etc';
+}
+// "자주 쓰는 기능" = 직접 만든 기능(mine) 중 스킨 파일 묶음이 아닌 것
+const isTop = f => f.mine && !/^(c_|scr_)/.test(f.id);
+// 기본 화면에 보일 기능 / 고급(스킨 파일 묶음) 기능
+const isCore = f => f.mine || !/^(c_|scr_)/.test(f.id);
+
+// ================= 레시피 =================
+// 기능 묶음에 든 추천 설정 + 목적별 레시피 (묶음에 있는 기능만 써요)
+const RECIPES = [
+  {name: '보스 · 카우 런', desc: '몬스터 특성 강조 · 미니맵 · 길찾기 화살표 · 출구 띠 · 죽으면 바로 대기실',
+   ids: ['monster_mods', 'mini_map', 'arrows_catacomb_durance', 'arrows_halls', 'arrows_baal', 'arrows_court', 'chaos_bridge_ox', 'exit_band', 'death_exit', 'lobby_difficulty', 'esc_quick', 'my_level_xp', 'party_levels']},
+  {name: '가볍게 (저사양)', desc: '글자·화면 기능만. 효과·조명·스킬 그림은 기준 스킨 그대로',
+   ids: ['monster_mods', 'mini_map', 'exit_band', 'lobby_difficulty', 'esc_quick', 'death_exit']},
+];
+function recipeList() {
+  const out = (P.presets || []).map(p => ({name: p.name, choices: p.choices, params: p.params || {}, kind: 'preset'}));
+  for (const r of RECIPES) {
+    const ch = {};
+    for (const id of r.ids) if (byId[id]) ch[id] = byId[id].options[0].key;
+    if (Object.keys(ch).length >= 3) out.push({name: r.name, desc: r.desc, choices: ch, params: {}, kind: 'recipe'});
+  }
+  return out;
+}
+const sameChoices = (a, b) => { const ka = Object.keys(a).filter(k => a[k]), kb = Object.keys(b).filter(k => b[k]); return ka.length === kb.length && ka.every(k => a[k] === b[k]); };
+function recipeDesc(ch) { return Object.keys(ch).filter(id => byId[id] && isTop(byId[id])).slice(0, 5).map(id => shortName(byId[id])).join(' · '); }
+function shortName(f) { return f.name.replace(/\s*\(.*?\)\s*/g, ' ').replace(/^\[실험\]\s*/, '').split(':')[0].trim(); }
+async function useRecipe(i) {
+  const r = recipeList()[i];
+  if (!confirm(`"${r.name}"(으)로 바꿀까요? 지금 고른 기능은 이 레시피로 바뀌어요.\n(지금 설정을 남기려면 먼저 "내 설정으로 저장"을 눌러 주세요)`)) return;
+  S.choices = Object.assign({}, r.choices); Object.assign(S.params, r.params); queueSave(); renderHome(); toast(`"${r.name}"(으)로 바꿨어요`);
+}
+
+// ================= 설정 =================
 function chosen(f) { return S.choices[f.id] || ''; }
 function setChoice(f, key) {
   if (key) S.choices[f.id] = key; else delete S.choices[f.id];
-  if (key) for (const r of (f.requires || [])) if (!S.choices[r]) { S.choices[r] = byId[r].options[0].key; toast(`"${byId[r].name}"도 같이 켰어요 (꼭 필요해요)`); }
+  if (key) for (const r of (f.requires || [])) if (byId[r] && !S.choices[r]) { S.choices[r] = byId[r].options[0].key; toast(`"${byId[r].name}"도 같이 켰어요 (꼭 필요해요)`); }
   if (!key) for (const g of P.features) if ((g.requires || []).includes(f.id) && S.choices[g.id]) { delete S.choices[g.id]; toast(`"${g.name}"도 같이 뺐어요 (이 기능이 있어야 해요)`); }
   queueSave();
 }
-function param(id, dflt) { return id in S.params ? S.params[id] : dflt; }
+const DEF = {};
+function param(id, dflt) { return id in S.params ? S.params[id] : id in DEF ? DEF[id] : dflt; }
 function queueSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); updateCounts(); }
 async function saveNow() { clearTimeout(saveTimer); saveTimer = null; await api('/api/settings', S); }
-function selCount() { return Object.keys(S.choices).filter(k => byId[k]).length; }
+function selCount() { return Object.keys(S.choices).filter(k => byId[k] && S.choices[k]).length; }
 
-// ---------- 첫 화면
+// ================= 홈 =================
 function renderHome() {
   const st = STATE;
   $('ver').textContent = 'v' + st.version;
-  const g = $('gameSub');
-  if (st.gameFound) { g.textContent = '✓ ' + st.gameDir; g.className = 'sub ok'; }
-  else { g.textContent = '게임 폴더를 못 찾았어요. [폴더 고르기]로 알려 주세요 (안 고르면 이 프로그램 폴더에 만들어져요)'; g.className = 'sub bad'; }
-  const b = $('baseSub');
-  if (st.base) { b.innerHTML = `✓ <b>${esc(st.base.mod)}</b> — ${esc(st.base.path)}<br>파일 ${st.base.files}개 · ${mb(st.base.size)} · ${esc(st.base.time)}`; b.className = 'sub ok'; }
-  else if (st.baseErr) { b.textContent = st.baseErr; b.className = 'sub bad'; }
-  else if (st.basePath) { b.textContent = '여는 중... ' + st.basePath; b.className = 'sub'; }
-  else { b.textContent = '기능을 얹을 스킨 mpq를 골라 주세요 (예: 게임폴더\\mods\\yupgoolg\\yupgoolg.mpq)'; b.className = 'sub bad'; }
-  $('modChips').innerHTML = (st.mods || []).length
-    ? '<span class="sub" style="align-self:center">고를 수 있는 스킨:</span>' + st.mods.map(m => `<button class="chip ${st.base && st.base.path === m.path ? 'on' : ''}" onclick='pickBase(${JSON.stringify(m.path)})'>${esc(m.name)} <span class="sub">${esc(m.time)}</span></button>`).join('')
-    : '';
-  $('buildBtn').disabled = !st.base || st.job.running;
+  $('gDot').className = 'dot ' + (st.gameFound ? 'on' : 'off');
+  $('gameSub').textContent = st.gameFound ? st.gameDir : '못 찾았어요 — [바꾸기]로 알려 주세요';
+  $('bDot').className = 'dot ' + (st.base ? 'on' : st.basePath && !st.baseErr ? 'mid' : 'off');
+  $('baseSub').textContent = st.base ? `${st.base.mod} · 파일 ${st.base.files.toLocaleString()}개 · ${mb(st.base.size)}`
+    : st.baseErr ? st.baseErr : st.basePath ? '여는 중...' : '골라 주세요 — [바꾸기]';
+  $('iDot').className = 'dot ' + (st.installed ? 'mid' : '');
+  $('instSub').textContent = st.installed ? `${st.modName} · ${st.inGame ? '게임 폴더 mods' : '이 프로그램 폴더'}` : '아직 없어요';
+  $('copyCmdBtn').classList.toggle('hidden', !st.installed);
   $('uninstBtn').classList.toggle('hidden', !st.installed);
+  $('buildBtn').disabled = !st.base || st.job.running;
+  // 레시피 + 내 설정
+  const rs = recipeList();
+  let h = rs.map((r, i) => {
+    const cur = sameChoices(r.choices, S.choices);
+    const n = Object.keys(r.choices).filter(k => byId[k]).length;
+    return `<div class="recipe ${cur ? 'cur' : ''}"><div class="n">${esc(r.name)}${cur ? '<span class="tag">지금 쓰는 중</span>' : ''}</div>
+      <div class="d">${esc(r.desc || recipeDesc(r.choices))}</div>
+      <div class="f"><span class="sub">기능 ${n}개</span>${cur ? `<button class="linkbtn" onclick="openEditor('sel')">고른 것 보기</button>` : `<button class="btn small" onclick="useRecipe(${i})">이걸로 바꾸기</button>`}</div></div>`;
+  }).join('');
+  h += PROFS.map(p => `<div class="recipe prof"><div class="n">${esc(p.name)}</div><div class="d">내 설정 · ${esc(p.saved)} 저장</div>
+      <div class="f"><button class="linkbtn" onclick="profCmd('delete', ${esc(JSON.stringify(p.name))})">지우기</button><button class="btn small" onclick="profCmd('load', ${esc(JSON.stringify(p.name))})">불러오기</button></div></div>`).join('');
+  $('recipes').innerHTML = h;
   updateCounts();
+  renderHomeCheck();
+}
+function stateCounts() {
+  const c = {patch: 0, new: 0, replace: 0, same: 0, cant: 0};
+  for (const f of P.features) { const k = S.choices[f.id]; const s = k && STATUS[f.id] && STATUS[f.id][k]; if (s) c[s.state]++; }
+  return c;
 }
 function updateCounts() {
   const n = selCount();
-  $('featSub').textContent = n ? `${n}개 골랐어요` : '아직 고른 기능이 없어요 (안 골라도 기준 스킨 그대로 만들 수 있어요)';
-  $('selChips').innerHTML = P.features.filter(f => S.choices[f.id]).map(f => {
-    const o = f.options.find(o => o.key === S.choices[f.id]);
-    return `<span class="chip">${esc(f.name)}${f.options.length > 1 && o ? ' · ' + esc(o.label) : ''}</span>`;
-  }).join('');
-  $('chgCount').textContent = n ? `고른 기능 ${n}개` : '';
+  if ($('featSub')) {
+    const c = stateCounts();
+    $('featSub').textContent = n ? `켜진 기능 ${n}개` + (Object.keys(STATUS).length ? ` · 덧붙임 ${c.patch} · 새로 더함 ${c.new} · 기준 스킨 파일 바꿈 ${c.replace}` : '') : '아직 고른 기능이 없어요 (안 골라도 기준 스킨 그대로 만들 수 있어요)';
+    $('buildSub').textContent = `기능 ${n}개`;
+    $('edBuild').textContent = `만들기 (${n})`;
+  }
 }
-
 async function refresh() { STATE = await api('/api/state'); renderHome(); return STATE; }
 async function pickGame() {
   toast('폴더 고르는 창이 떴어요 (안 보이면 작업표시줄을 확인하세요)');
@@ -260,6 +364,15 @@ async function pickGame() {
   if (!r.ok) { if (r.error) alert(r.error); return; }
   await refresh(); toast('게임 폴더를 바꿨어요');
 }
+function openBaseModal() {
+  const ms = STATE.mods || [];
+  $('baseBox').innerHTML = `<h2>기준 스킨 고르기</h2><div class="sub">기능을 얹을 스킨이에요. 이 스킨 파일은 바뀌지 않아요.</div>
+    <div class="mlist">${ms.length ? ms.map(m => `<button class="rowlink" onclick='closeBaseModal();pickBase(${JSON.stringify(m.path)})' style="${STATE.base && STATE.base.path === m.path ? 'outline:2px solid var(--gold)' : ''}">${esc(m.name)} <span>${mb(m.size)} · ${esc(m.time)}</span></button>`).join('')
+      : '<div class="sub">게임 폴더 mods 에 스킨이 없어요</div>'}</div>
+    <div class="acts"><button class="btn gold" onclick="closeBaseModal();pickBase('')">다른 mpq 파일 고르기</button><button class="btn" onclick="closeBaseModal()">닫기</button></div>`;
+  $('baseModal').classList.remove('hidden');
+}
+function closeBaseModal() { $('baseModal').classList.add('hidden'); }
 async function pickBase(path) {
   if (!path) toast('파일 고르는 창이 떴어요 (안 보이면 작업표시줄을 확인하세요)');
   const r = await api('/api/pickbase', {Path: path});
@@ -272,11 +385,11 @@ async function pollStatus() {
   const r = await api('/api/status');
   STATUS = r.status || {};
   const c = r.cmp;
-  $('cmpbar').innerHTML = !STATE.base ? '기준 스킨을 고르면 기능마다 “이미 있음 / 새로 더함 / 바꿈”을 알려 드려요'
+  $('cmpbar').innerHTML = !STATE.base ? '기준 스킨을 고르면 기능마다 "이미 있음 / 새로 더함 / 덧붙임 / 바꿈"을 알려 드려요'
     : c.running ? `기준 스킨(${esc(STATE.base.mod)})과 비교하는 중... ${c.total ? Math.round(c.done * 100 / c.total) : 0}%`
-    : `기준 스킨 <b>${esc(STATE.base.mod)}</b>과 비교했어요 — <span class="badge st-same">✓ 이미 있음</span> <span class="badge st-new">새로 더함</span> <span class="badge st-patch">덧붙임</span> <span class="badge st-replace">⚠ 기준 스킨 파일을 바꿈</span> <span class="badge st-cant">넣을 수 없음</span>`;
-  if (!$('editor').classList.contains('hidden')) renderList(true);
-  renderHomeCheck();
+    : `기준 스킨 <b>${esc(STATE.base.mod)}</b>과 비교했어요 — <span class="badge st-same">✓ 이미 있음</span> <span class="badge st-new">새로 더함</span> <span class="badge st-patch">덧붙임</span> <span class="badge st-replace">⚠ 기준 스킨 파일 바꿈</span> <span class="badge st-cant">넣을 수 없음</span>`;
+  if (!$('editor').classList.contains('hidden')) renderEditor(true);
+  renderHomeCheck(); updateCounts();
   if (c.running) setTimeout(pollStatus, 1000); else loadDiff();
 }
 
@@ -298,38 +411,23 @@ async function startBuild() {
 }
 function showResult(ok, j, lg) {
   const box = $('result');
-  box.className = 'result ' + (ok ? 'ok' : 'err');
+  box.className = 'result ' + (ok ? 'okr' : 'err');
   const logHtml = l => (l && l.length) ? `<details class="log"><summary class="sub">자세한 기록</summary><pre>${esc(l.join('\n'))}</pre></details>` : '';
   if (!ok) { box.innerHTML = `<h3>만들지 못했어요</h3><p>${esc(j)}</p>${logHtml(lg)}`; return; }
   const cmd = '-mod ' + STATE.modName;
   box.innerHTML = `<h3>✅ 완성! ${j.inGame ? '게임에 넣었어요' : '만들었어요'}</h3>
-    ${j.inGame ? '' : `<p>게임 폴더를 몰라서 이 프로그램 폴더에 만들었어요. [만든 스킨 파일이 있는 폴더 열기]에서 <b>mods</b> 폴더를 게임 폴더 안에 복사하세요.</p>`}
-    <p>기준 스킨(${esc(STATE.base.mod)}) 파일은 그대로 두고, <b>mods\\${esc(STATE.modName)}</b>에 새로 만들었어요.</p>
-    <p><b>처음 한 번만</b> 게임 실행 옵션을 바꿔 주세요 (예전 스킨빌더로 이미 했다면 그대로 두면 돼요):</p>
+    ${j.inGame ? '' : `<p>게임 폴더를 몰라서 이 프로그램 폴더에 만들었어요. [만든 스킨 파일 보기]에서 <b>mods</b> 폴더를 게임 폴더 안에 복사하세요.</p>`}
+    <p><b>처음 한 번만</b> 게임 실행 옵션을 바꿔 주세요 (예전에 했다면 그대로 두면 돼요):</p>
     <ol class="steps"><li>Battle.net → 디아블로 II: 레저렉션 → 재생 버튼 옆 ⚙ → <b>게임 설정</b></li><li><b>추가 명령줄 인수</b>에 아래 글자 (원래 스킨 이름 대신)</li></ol>
     <p style="margin-top:10px"><span class="code">${cmd} <button class="btn small" onclick="copyCmd('${cmd}')">복사</button></span></p>
     ${logHtml(j.log)}`;
 }
-function copyCmd(t) { navigator.clipboard.writeText(t).then(() => toast('복사했어요'), () => toast(t)); }
+function copyCmd(t) { navigator.clipboard.writeText(t).then(() => toast('"' + t + '" 를 복사했어요'), () => toast(t)); }
 async function uninstall() {
   if (!confirm('게임에 넣은 "만든 스킨"을 뺄까요? (기준 스킨과 설정은 그대로 남아요)')) return;
   const r = await api('/api/uninstall', {});
   if (!r.ok) alert(r.error);
   await refresh(); toast('뺐어요. 게임 실행 옵션을 원래 스킨 이름(-mod ' + (STATE.base ? STATE.base.mod : '...') + ')으로 바꾸면 원래 스킨으로 돌아가요');
-}
-
-// ---------- 기능 고르기
-function openEditor() { $('home').classList.add('hidden'); $('editor').classList.remove('hidden'); renderFilters(); renderList(); pollStatus(); }
-function closeEditor() { $('editor').classList.add('hidden'); $('home').classList.remove('hidden'); if (saveTimer) saveNow(); updateCounts(); }
-function applyPreset() {
-  const pr = (P.presets || [])[0]; if (!pr) return;
-  if (!confirm(`"${pr.name}" 설정으로 바꿀까요? 지금 고른 것은 지워져요.`)) return;
-  S.choices = Object.assign({}, pr.choices); Object.assign(S.params, pr.params); queueSave(); renderList();
-}
-function resetParams(id) {
-  const f = P.features.find(x => x.id === id); if (!f) return;
-  for (const p of f.params || []) S.params[p.id] = p.default;
-  queueSave(); renderList(true);
 }
 
 // ---- 튕김 원인 찾기
@@ -353,99 +451,100 @@ function renderBis() {
   const b = BIS; if (!b || !b.active) { $('bis').classList.add('hidden'); return; }
   const nm = id => esc(BISN[id] || id);
   let h = `<h2>튕김 원인 찾기 · ${b.round}번째 시험</h2><div class="sub">남은 후보 ${b.cand.length}개 / 처음 ${b.total}개</div>`;
-  if (b.phase === 'building') h += `<div class="progress"><div class="bar"><i style="width:${b.percent}%"></i></div><div class="step">시험 스킨을 만들어 게임에 넣는 중... ${b.percent}%</div></div>`;
-  if (b.phase === 'waiting') h += `<p><b>게임을 켜 보세요.</b> 캐릭터 고르는 화면까지 들어가면 "켜졌어요"를 눌러 주세요. 게임을 끈 뒤에 눌러야 다음 시험 스킨을 넣을 수 있어요. 이 스킨 빌더 창은 끝날 때까지 켜 두세요.</p>
+  if (b.phase === 'building') h += `<div style="margin-top:12px"><div class="bar"><i style="width:${b.percent}%"></i></div><div class="sub" style="margin-top:6px">시험 스킨을 만들어 게임에 넣는 중... ${b.percent}%</div></div>`;
+  if (b.phase === 'waiting') h += `<p><b>게임을 켜 보세요.</b> 캐릭터 고르는 화면까지 들어가면 "켜졌어요"를 눌러 주세요. 게임을 끈 뒤에 눌러야 다음 시험 스킨을 넣을 수 있어요. 이 창은 끝날 때까지 켜 두세요.</p>
     <div class="sub">이번 시험에 들어간 기능 ${b.testing.length}개</div><ul>${b.testing.map(id => `<li>${nm(id)}</li>`).join('')}</ul>
-    <div class="acts"><button class="btn good" onclick="bisCmd('ok')">✓ 켜졌어요</button><button class="btn badb" onclick="bisCmd('crash')">✗ 튕겼어요</button></div>`;
+    <div class="acts"><button class="btn" style="background:#2e5a34;border-color:#2e5a34;color:#fff" onclick="bisCmd('ok')">✓ 켜졌어요</button><button class="btn" style="background:#7a2418;border-color:#7a2418;color:#fff" onclick="bisCmd('crash')">✗ 튕겼어요</button></div>`;
   if (b.phase === 'error') h += `<p class="bad">${esc(b.error)}</p><div class="acts"><button class="btn" onclick="bisCmd('stop')">닫기</button></div>`;
   if (b.phase === 'done') {
     h += b.error ? `<p>${esc(b.error)}</p>` : '';
     h += `<p>원인으로 보이는 기능: <b>${nm(b.result)}</b></p>`;
     if (b.partners.length) h += `<div class="sub">이 기능은 아래 기능들 중 무언가와 같이 넣을 때만 튕겨요</div><ul>${b.partners.map(id => `<li>${nm(id)}</li>`).join('')}</ul>`;
-    h += `<div class="acts"><button class="btn good" onclick="bisDrop()">이 기능 빼고 다시 만들기</button><button class="btn" onclick="bisCmd('stop')">닫기 (그대로 두기)</button></div>
-      <div class="sub" style="margin-top:10px">지금 게임에는 마지막 시험 스킨이 들어 있어요. 닫기를 눌렀다면 첫 화면에서 다시 "스킨 만들어서 게임에 넣기"를 눌러 주세요.</div>`;
+    h += `<div class="acts"><button class="btn gold" onclick="bisDrop()">이 기능 빼고 다시 만들기</button><button class="btn" onclick="bisCmd('stop')">닫기 (그대로 두기)</button></div>
+      <div class="sub" style="margin-top:10px">지금 게임에는 마지막 시험 스킨이 들어 있어요. 닫았다면 홈에서 다시 "스킨 만들어서 게임에 넣기"를 눌러 주세요.</div>`;
   }
   if (b.phase !== 'done' && b.phase !== 'error') h += `<div class="acts" style="justify-content:flex-end"><button class="linkbtn" onclick="if(confirm('원인 찾기를 그만할까요?'))bisCmd('stop')">그만하기</button></div>`;
   $('bisBox').innerHTML = h; $('bis').classList.remove('hidden');
 }
 async function bisDrop() {
-  const id = BIS.result; S.choices[id] = ''; await saveNow();
+  const id = BIS.result; delete S.choices[id]; await saveNow();
   await api('/api/bisect', {cmd: 'stop'}); $('bis').classList.add('hidden');
   toast('"' + (BISN[id] || id) + '" 를 뺐어요. 다시 만들어요'); updateCounts(); startBuild();
 }
 
-
-// ---- 내 설정 저장·불러오기
-let PROFS = [];
+// ---- 내 설정
 async function profList(r) {
   r = r || await api('/api/profile', {cmd: 'list'});
-  PROFS = r.profiles || [];
-  PROFS.sort((a, b) => a.name.localeCompare(b.name));
-  $('profSel').innerHTML = PROFS.length ? PROFS.map(p => `<option value="${esc(p.name)}">${esc(p.name)} (${esc(p.saved)})</option>`).join('') : '<option value="">저장한 설정 없음</option>';
+  PROFS = (r.profiles || []).sort((a, b) => a.name.localeCompare(b.name));
+  if (STATE) renderHome();
 }
 async function profSave() {
   if (saveTimer) await saveNow();
-  const n = prompt('이 설정의 이름 (같은 이름이면 덮어써요)', $('profSel').value || '내 설정 1');
+  const n = prompt('이 설정의 이름 (같은 이름이면 덮어써요)', '내 설정 ' + (PROFS.length + 1));
   if (!n) return;
   const r = await api('/api/profile', {cmd: 'save', name: n});
   if (!r.ok) { alert(r.error); return; }
-  await profList(r); $('profSel').value = n; toast('"' + n + '" 저장했어요');
+  await profList(r); toast('"' + n + '" 저장했어요');
 }
-async function profCmd(cmd) {
-  const n = $('profSel').value; if (!n) return;
+async function profCmd(cmd, n) {
   if (cmd === 'delete' && !confirm('"' + n + '" 설정을 지울까요?')) return;
-  if (cmd === 'load' && !confirm('"' + n + '" 설정을 불러올까요? 지금 고른 것은 바뀌어요 (먼저 저장해 두세요)')) return;
+  if (cmd === 'load' && !confirm('"' + n + '" 설정을 불러올까요? 지금 고른 것은 바뀌어요')) return;
   if (saveTimer) await saveNow();
   const r = await api('/api/profile', {cmd, name: n});
   if (!r.ok) { alert(r.error); return; }
-  if (cmd === 'load') { S = {choices: r.choices || {}, params: r.params || {}}; updateCounts(); renderHomeCheck(); toast('"' + n + '" 불러왔어요'); }
+  if (cmd === 'load') { S = {choices: r.choices || {}, params: r.params || {}}; toast('"' + n + '" 불러왔어요'); }
   await profList(r);
 }
-// ---- 기준 스킨 새 버전 확인
+// ---- 만들기 전에 확인 · 기준 스킨 새 버전
 let DIFF = null;
 async function loadDiff() { DIFF = await api('/api/basediff', {}); renderHomeCheck(); }
 function renderHomeCheck() {
-  const c = $('diffCard'); if (!c || !P) return;
+  if (!P || !$('checkCard')) return;
   const bad = P.features.filter(f => S.choices[f.id] && STATUS[f.id] && STATUS[f.id][S.choices[f.id]] && STATUS[f.id][S.choices[f.id]].state === 'cant');
-  let h = '';
-  if (DIFF && DIFF.has) {
-    h += `<h3>기준 스킨이 지난번과 달라요</h3><div class="sub">지난번: ${esc(DIFF.prevMod)} · ${esc(DIFF.prevTime)}<br>${esc(DIFF.prevPath)}</div>
-      <p>새로 생긴 파일 <b>${DIFF.added}</b> · 바뀐 파일 <b>${DIFF.changed}</b> · 없어진 파일 <b>${DIFF.removed}</b></p>
-      <table><tr><th>묶음</th><th>새로</th><th>바뀜</th><th>없어짐</th><th>예</th></tr>${DIFF.groups.slice(0, 10).map(g => `<tr><td>${esc(g.name)}</td><td>${g.added || ''}</td><td>${g.changed || ''}</td><td>${g.removed || ''}</td><td class="sub">${g.samples.slice(0, 3).map(esc).join(', ')}</td></tr>`).join('')}</table>`;
-  }
   const cmpDone = STATE && STATE.base && Object.keys(STATUS).length;
-  if (h || bad.length) {
-    if (!cmpDone) h += '<p class="sub">고른 기능이 새 스킨에 잘 얹히는지 확인하는 중...</p>';
-    else if (bad.length) h += `<p class="bad">이 기능은 지금 기준 스킨에 넣을 수 없어요 (넣어도 무시돼요):</p><ul>${bad.map(f => `<li>${esc(f.name)} — ${esc((STATUS[f.id][S.choices[f.id]].notes || []).join(' / '))}</li>`).join('')}</ul>`;
-    else h += '<p class="ok">✓ 고른 기능은 모두 이 기준 스킨에 그대로 얹을 수 있어요</p>';
-    if (DIFF && DIFF.has) h += '<p class="sub">"바뀐 파일"이 화면 배치(layouts)에 많으면, 만든 뒤 위치가 달라졌는지 게임에서 한번 봐 주세요. 튕기면 아래 "게임이 튕겨요 (원인 찾기)"를 쓰세요.</p><button class="linkbtn" onclick="api(\'/api/basediff\',{cmd:\'dismiss\'}).then(loadDiff)">확인했어요 (닫기)</button>';
-  }
-  c.innerHTML = h; c.classList.toggle('hidden', !h);
+  let h = '<h3>만들기 전에 확인</h3>';
+  if (!STATE || !STATE.base) h += '<div class="chk"><i class="n">!</i><div>기준 스킨을 먼저 골라 주세요</div></div>';
+  else if (!cmpDone) h += '<div class="chk"><i class="n">…</i><div>고른 기능이 기준 스킨에 잘 얹히는지 확인하는 중이에요</div></div>';
+  else if (bad.length) h += `<div class="chk"><i class="n">!</i><div>이 기능은 지금 기준 스킨에 넣을 수 없어요 (넣어도 무시돼요)<br>${bad.map(f => `<b>${esc(f.name)}</b> <span class="sub">${esc((STATUS[f.id][S.choices[f.id]].notes || []).join(' / '))}</span>`).join('<br>')}</div></div>`;
+  else h += `<div class="chk"><i class="y">✓</i><div>고른 기능 ${selCount()}개 모두 이 기준 스킨에 얹을 수 있어요</div></div>`;
+  if (DIFF && DIFF.has) h += `<div class="chk"><i class="n">!</i><div>기준 스킨이 지난번과 달라요 · 바뀐 파일 ${DIFF.changed}개 <button class="linkbtn" onclick="$('diffCard').classList.toggle('hidden')">무엇이 바뀌었나</button></div></div>`;
+  $('checkCard').innerHTML = h;
+  const c = $('diffCard');
+  if (DIFF && DIFF.has) {
+    c.innerHTML = `<h3>기준 스킨이 지난번과 달라요</h3><div class="sub">지난번: ${esc(DIFF.prevMod)} · ${esc(DIFF.prevTime)}</div>
+      <div>새로 생긴 파일 <b>${DIFF.added}</b> · 바뀐 파일 <b>${DIFF.changed}</b> · 없어진 파일 <b>${DIFF.removed}</b></div>
+      <div style="overflow-x:auto"><table><tr><th>묶음</th><th>새로</th><th>바뀜</th><th>없어짐</th><th>예</th></tr>${DIFF.groups.slice(0, 10).map(g => `<tr><td>${esc(g.name)}</td><td>${g.added || ''}</td><td>${g.changed || ''}</td><td>${g.removed || ''}</td><td class="sub">${g.samples.slice(0, 3).map(esc).join(', ')}</td></tr>`).join('')}</table></div>
+      <div class="sub">화면 배치(layouts)가 많이 바뀌었으면, 만든 뒤 위치가 달라졌는지 게임에서 한번 봐 주세요.</div>
+      <button class="linkbtn" onclick="api('/api/basediff',{cmd:'dismiss'}).then(loadDiff)">확인했어요 (닫기)</button>`;
+  } else c.classList.add('hidden');
 }
-
 async function applyPatch() {
+  toast('최신 skinbuilder.mpq 나 패치 파일을 골라 주세요');
   const r = await api('/api/patch', {});
   if (!r || !r.ok) { if (r && r.error) alert(r.error); return; }
   toast(`${r.version} 버전으로 업그레이드했어요. 프로그램을 다시 켜요...`);
   setTimeout(() => location.reload(), 6000);
 }
-function resetAll() { if (!confirm('고른 기능을 모두 뺄까요?')) return; S.choices = {}; queueSave(); renderList(); }
-const FILTERS = [['mine', '내 기능'], ['sel', '고른 것'], ['all', '고급 (전체 388개)'], ['missing', '기준 스킨에 없는 것']];
-function renderFilters() {
-  $('filters').innerHTML = FILTERS.map(([k, l]) => `<button class="${FILTER === k ? 'on' : ''}" onclick="FILTER='${k}';renderFilters();renderList()">${l}</button>`).join('');
+
+// ================= 기능 고르기 =================
+function openEditor(filter) {
+  if (filter) FILTER = filter;
+  $('home').classList.add('hidden'); $('editor').classList.remove('hidden');
+  renderEditor(); pollStatus();
 }
-function featText(f) { return (f.name + ' ' + (f.easy || []).map(r => r[1]).join(' ') + ' ' + (f.desc || '') + ' ' + f.options.map(o => o.label).join(' ')).toLowerCase(); }
+function closeEditor() { $('editor').classList.add('hidden'); $('home').classList.remove('hidden'); if (saveTimer) saveNow(); renderHome(); }
+const VIEWS = [['list', '목록'], ['both', '목록 + 미리보기'], ['big', '크게 보며 배치']];
+const FILTERS = [['all', '전체'], ['sel', '켠 것'], ['warn', '주의']];
+function setView(v) { VIEW = v; try { localStorage.setItem('sbView', v); } catch (e) {} if (v === 'big' && (!SELF || !LAYERS[SELF])) SELF = Object.keys(LAYERS).find(id => byId[id]) || SELF; renderEditor(); }
+function featText(f) { return (f.name + ' ' + (f.easy || []).map(r => r[1]).join(' ') + ' ' + (f.desc || '') + ' ' + f.options.map(o => o.label).join(' ') + ' ' + (f.group || '')).toLowerCase(); }
 function bestState(f) {
   const s = STATUS[f.id]; if (!s) return '';
+  const k = S.choices[f.id];
+  if (k && s[k]) return s[k].state;
   const st = Object.values(s).map(x => x.state);
-  if (st.includes('same')) return 'same';
-  return st[0] || '';
+  return st.includes('same') ? 'same' : (st[0] || '');
 }
-function filePaths(o) {
-  const out = [];
-  for (const op of o.ops) if (Array.isArray(op) && op[0] !== 'n') out.push(op[1].toLowerCase());
-  return out;
-}
+function filePaths(o) { const out = []; for (const op of o.ops) if (Array.isArray(op) && op[0] !== 'n') out.push(op[1].toLowerCase()); return out; }
 function conflicts() {
   const owner = {}, res = {};
   for (const f of P.features) {
@@ -459,91 +558,260 @@ function conflicts() {
   return res;
 }
 let CONF = {};
-function renderList(keepScroll) {
-  const list = $('list'), nav = $('nav'), y = list.scrollTop;
-  const q = $('q').value.trim().toLowerCase();
+function isWarn(f) { const st = bestState(f); return !!(S.choices[f.id] && (st === 'cant' || st === 'replace' || CONF[f.id])); }
+function visible(f, q) {
+  if (q && !featText(f).includes(q)) return false;
+  if (FILTER === 'sel' && !S.choices[f.id]) return false;
+  if (FILTER === 'warn' && !isWarn(f)) return false;
+  return true;
+}
+function inGoal(f, g) { return g === 'top' ? isTop(f) : goalOf(f) === g; }
+function renderEditor(keep) {
   CONF = conflicts();
-  const groups = P.groups.map(g => ({g, items: []}));
-  const gi = Object.fromEntries(groups.map((x, i) => [x.g, i]));
-  for (const f of P.features) {
-    if (q && !featText(f).includes(q)) continue;
-    if (FILTER === 'mine' && !f.mine) continue;
-    if (FILTER === 'sel' && !S.choices[f.id]) continue;
-    if (FILTER === 'missing' && bestState(f) === 'same') continue;
-    groups[gi[f.group]].items.push(f);
+  const q = $('q').value.trim().toLowerCase();
+  $('viewSeg').innerHTML = VIEWS.map(([k, l]) => `<button class="${VIEW === k ? 'on' : ''}" onclick="setView('${k}')">${l}</button>`).join('');
+  $('filterSeg').innerHTML = FILTERS.map(([k, l]) => {
+    const n = k === 'sel' ? selCount() : k === 'warn' ? P.features.filter(isWarn).length : 0;
+    return `<button class="${FILTER === k ? 'on' : ''}" onclick="FILTER='${k}';renderEditor()">${l}${n ? ' ' + n : ''}</button>`;
+  }).join('');
+  $('work').className = 'work' + (VIEW === 'list' ? ' list-only' : VIEW === 'big' ? ' big' : '');
+  // 목적 탭
+  const cnt = g => { const fs = P.features.filter(f => inGoal(f, g) && (g === 'top' || isCore(f))); return [fs.filter(f => S.choices[f.id]).length, fs.length]; };
+  const advN = P.features.filter(f => !isCore(f)).length;
+  $('goals').innerHTML = '<div class="hd">무엇을 하고 싶나요?</div>' + GOALS.map(([k, l]) => {
+    const [a, b] = cnt(k); if (!b && k !== 'top') return '';
+    return `<button class="${GOAL === k && !q ? 'on' : ''}" onclick="GOAL='${k}';$('q').value='';renderEditor()">${l} <b>${a ? a + '/' : ''}${b}</b></button>`;
+  }).join('') + (advN ? `<hr><button class="${GOAL === 'adv' && !q ? 'on' : ''}" onclick="GOAL='adv';$('q').value='';renderEditor()">고급 — 스킨 파일 묶음 <b>${advN}</b></button>` : '');
+  // 목록
+  const fl = $('flist'), y = fl.scrollTop;
+  let core, adv, title;
+  if (VIEW === 'big') {
+    core = Object.keys(LAYERS).map(id => byId[id]).filter(Boolean); adv = []; title = ['화면에 보이는 기능', '눌러서 고르고, 오른쪽 화면에서 끌어서 옮겨요'];
+  } else if (q) {
+    const all = P.features.filter(f => visible(f, q)); core = all.filter(isCore); adv = all.filter(f => !isCore(f)); title = [`"${$('q').value.trim()}" 찾은 기능 ${all.length}개`, ''];
+  } else if (GOAL === 'adv') {
+    core = P.features.filter(f => !isCore(f) && visible(f)); adv = []; title = ['고급 — 스킨 파일 묶음', '스킨에서 파일을 통째로 가져오는 묶음이에요. 기준 스킨 파일을 바꿀 수 있어요'];
+  } else {
+    const g = P.features.filter(f => inGoal(f, GOAL) && visible(f));
+    core = g.filter(f => GOAL === 'top' || isCore(f)); adv = GOAL === 'top' ? [] : g.filter(f => !isCore(f));
+    title = [GOALS.find(x => x[0] === GOAL)[1], GOAL === 'top' ? '많이 쓰는 기능을 모아 뒀어요' : ''];
   }
-  let html = '', navHtml = '';
-  groups.forEach((x, i) => {
-    if (!x.items.length) return;
-    const n = x.items.filter(f => S.choices[f.id]).length;
-    navHtml += `<button onclick="document.getElementById('g${i}').scrollIntoView()">${esc(x.g)} <b class="${n ? 'sel' : ''}">${n ? n + ' / ' : ''}${x.items.length}</b></button>`;
-    html += `<div class="gtitle" id="g${i}">${esc(x.g)}</div>` + x.items.map(card).join('');
-  });
-  list.innerHTML = html || '<div class="empty">찾는 기능이 없어요</div>';
-  nav.innerHTML = navHtml;
-  if (keepScroll) list.scrollTop = y;
+  let h = `<div class="ghead"><h2>${esc(title[0])}</h2><span class="sub">${esc(title[1])}</span></div>`;
+  h += core.length ? core.map(frow).join('') : '<div class="empty">여기에 맞는 기능이 없어요</div>';
+  if (adv.length) h += `<details class="adv" ${q ? 'open' : ''}><summary>스킨 파일 묶음 ${adv.length}개 (고급)</summary>${adv.map(frow).join('')}</details>`;
+  fl.innerHTML = h;
+  if (keep) fl.scrollTop = y;
+  if (!SELF || !byId[SELF]) SELF = (core[0] || {}).id;
+  renderSide();
   updateCounts();
 }
 const ST_TXT = {same: '✓ 이미 있음', new: '새로 더함', patch: '덧붙임', replace: '⚠ 바꿈', cant: '넣을 수 없음'};
-function stBadge(st) { return st ? `<span class="badge st-${st.state}">${ST_TXT[st.state]}${st.state === 'replace' ? ' ' + st.replace : ''}</span>` : ''; }
-function card(f) {
+function stBadge(st) { return st ? `<span class="badge st-${st}">${ST_TXT[st]}</span>` : ''; }
+function summary(f) {
+  const k = S.choices[f.id];
+  const parts = [];
+  if (k && f.options.length > 1) parts.push((f.options.find(o => o.key === k) || {}).label);
+  for (const p of (f.params || []).slice(0, 3)) { const v = param(p.id, p.default); if (v !== '' && v !== undefined) parts.push(`${p.label.replace(/\s*\(.*?\)/, '')} ${v}`); }
+  if (!parts.length) { const e = (f.easy || []).find(r => r[0] === '무엇' || r[0] === '게임에서'); if (e) parts.push(e[1]); else if (f.desc) parts.push(f.desc); }
+  return parts.filter(Boolean).join(' · ');
+}
+function frow(f) {
+  const idx = P.features.indexOf(f), on = !!S.choices[f.id], st = bestState(f), L = LAYERS[f.id];
+  return `<div class="frow ${SELF === f.id ? 'cur' : ''}" onclick="selectF('${f.id}')">
+    <button class="sw ${on ? 'on' : ''}" role="switch" aria-checked="${on}" aria-label="${esc(f.name)}" onclick="event.stopPropagation();toggleF(${idx})"></button>
+    <div class="nm"><b>${esc(f.name)}</b><small>${esc(summary(f))}</small></div>
+    ${CONF[f.id] && on ? '<span class="badge st-replace">겹침</span>' : stBadge(st)}
+    ${L ? `<span class="cdot" style="background:${L.color}" title="미리보기에 보여요"></span>` : ''}
+  </div>`;
+}
+function toggleF(idx) {
+  const f = P.features[idx];
+  if (S.choices[f.id]) setChoice(f, ''); else setChoice(f, (LASTOPT[f.id] && f.options.find(o => o.key === LASTOPT[f.id])) ? LASTOPT[f.id] : f.options[0].key);
+  SELF = f.id; renderEditor(true);
+}
+const LASTOPT = {};
+function selectF(id) { SELF = id; renderEditor(true); }
+function pickOpt(idx, oi) { const f = P.features[idx]; const k = oi === '' ? '' : f.options[oi].key; if (k) LASTOPT[f.id] = k; setChoice(f, k); renderEditor(true); }
+function setParam(id, v) { S.params[id] = v; queueSave(); if (PVPARAMS.has(id) || id.startsWith('mm_color::')) drawPreview(); updateRowSummary(); }
+function updateRowSummary() { const f = byId[SELF]; const el = document.querySelector('.frow.cur small'); if (f && el) el.textContent = summary(f); }
+function resetParams(id) { const f = byId[id]; if (!f) return; for (const p of f.params || []) S.params[p.id] = p.default; queueSave(); renderEditor(true); }
+
+// ---------- 오른쪽: 미리보기 + 상세
+function renderSide() {
+  const side = $('side'); const f = byId[SELF];
+  if (VIEW === 'list') { side.innerHTML = ''; return; }
+  if (!f) { side.innerHTML = '<div class="empty">왼쪽에서 기능을 눌러 주세요</div>'; return; }
   const idx = P.features.indexOf(f), cur = chosen(f), s = STATUS[f.id] || {};
-  const opts = [`<button class="none ${cur ? '' : 'on'}" onclick="pick(${idx},'')">넣지 않음</button>`]
-    .concat(f.options.map((o, oi) => {
-      const st = s[o.key];
-      const sub = st ? ST_TXT[st.state] + (st.state === 'replace' ? ` ${st.replace}개` : '') : (STATE.base ? '…' : '');
-      return `<button class="${cur === o.key ? 'on' : ''}" onclick="pick(${idx},${oi})">${esc(f.options.length === 1 ? '넣기' : o.label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
-    })).join('');
-  const easy = (f.easy || []).map(([k, v]) => {
-    const cls = (k === '버전별 차이' || k === '버전 비교') ? 'd' : (k === '중요' || k === '주의' || k === '함께 켜짐' ? 'w' : '');
-    return `<div class="k ${cls}">${esc(k)}</div><div>${esc(v)}</div>`;
-  }).join('');
-  const one = f.options.length === 1 ? s[f.options[0].key] : null;
-  let detail = '';
-  const ost = cur ? s[cur] : one;
+  let h = '';
+  if (LAYERS[f.id] || VIEW === 'big') h += `<div class="pv" id="pv"></div><div class="pvnote"><span>점선 = 스킨 빌더가 넣는 것 · 지금 고른 기능은 금색 테두리</span><span>끌어서 옮기기 · 모서리로 크기 · 방향키 1칸, Shift 10칸</span><span>대략적인 자리예요 (기준 스킨에 따라 조금 달라요)</span></div>`;
+  h += `<div class="dhead"><h3>${esc(f.name)}</h3>${cur && (f.params || []).length ? `<button class="linkbtn" onclick="resetParams('${f.id}')">기본값으로</button>` : ''}</div>`;
+  const opts = [`<button class="${cur ? '' : 'on'}" onclick="pickOpt(${idx},'')">넣지 않음</button>`].concat(f.options.map((o, oi) => {
+    const st = s[o.key];
+    const sub = st ? ST_TXT[st.state] + (st.state === 'replace' ? ` ${st.replace}개` : '') : '';
+    return `<button class="${cur === o.key ? 'on' : ''}" onclick="pickOpt(${idx},${oi})">${esc(f.options.length === 1 ? '넣기' : o.label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
+  }));
+  h += `<div class="opts">${opts.join('')}</div>`;
+  if (cur && (f.params || []).length) h += `<div class="params">${f.params.map(paramHtml).join('')}</div>`;
+  const ost = cur ? s[cur] : (f.options.length === 1 ? s[f.options[0].key] : null);
+  const parts = [];
   if (ost) {
-    const parts = [];
     if (ost.state === 'same') parts.push('<span class="ok">기준 스킨에 이미 똑같이 들어 있어요. 넣어도 바뀌는 게 없어요</span>');
     if (ost.add) parts.push(`새 파일 ${ost.add}개를 더해요`);
-    if (ost.replace) parts.push(`<span class="w">기준 스킨 파일 ${ost.replace}개를 이 버전으로 바꿔요</span>${ost.replaced && ost.replaced.length ? ' <span class="sub">(' + ost.replaced.map(p => esc(p.split('\\').pop())).join(', ') + (ost.replace > ost.replaced.length ? ' …' : '') + ')</span>' : ''}`);
-    if (ost.remove) parts.push(`<span class="w">기준 스킨 파일 ${ost.remove}개를 빼서 게임 기본으로 돌려요</span>`);
+    if (ost.replace) parts.push(`<span class="warn">기준 스킨 파일 ${ost.replace}개를 이 버전으로 바꿔요</span>${ost.replaced && ost.replaced.length ? ' <span class="sub">(' + ost.replaced.map(p => esc(p.split('\\').pop())).join(', ') + (ost.replace > ost.replaced.length ? ' …' : '') + ')</span>' : ''}`);
+    if (ost.remove) parts.push(`<span class="warn">기준 스킨 파일 ${ost.remove}개를 빼서 게임 기본으로 돌려요</span>`);
     for (const n of ost.notes || []) parts.push(ost.state === 'cant' ? `<span class="bad">${esc(n)}</span>` : esc(n));
-    if (parts.length && (cur || ost.state !== 'new')) detail = `<div class="detail">${parts.join('<br>')}</div>`;
   }
-  if (cur && CONF[f.id]) detail += `<div class="detail"><span class="w">⚠ ${Object.entries(CONF[f.id]).map(([o, n]) => `"${esc(byId[o].name)}"과(와) 같은 파일 ${n}개`).join(', ')}를 바꿔요 — 목록에서 아래쪽에 있는 이 기능이 이겨요</span></div>`;
-  const params = cur && (f.params || []).length ? `<div class="params">${f.params.map(p => p.kind === 'text'
-    ? `<label>${esc(p.label)} <input value="${esc(param(p.id, p.default))}" maxlength="40" oninput="setParam('${p.id}', this.value)"></label>`
-    : p.kind === 'num'
-    ? `<label class="num">${esc(p.label)} <input type="range" min="${p.min}" max="${p.max}" step="${p.step}" value="${esc(param(p.id, p.default))}" oninput="this.nextElementSibling.value=this.value;setParam('${p.id}', this.value)"><input type="number" min="${p.min}" max="${p.max}" step="${p.step}" value="${esc(param(p.id, p.default))}" oninput="this.previousElementSibling.value=this.value;setParam('${p.id}', this.value)"></label>`
-    : `<label>${esc(p.label)} <select onchange="setParam('${p.id}', this.value)">${p.choices.map(c => `<option ${param(p.id, p.default) === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>`).join('')}<button class="linkbtn" onclick="resetParams('${f.id}')">기본값으로</button></div>` : '';
-  const prev = (f.previews || []).length ? `<div class="prev">${f.previews.slice(0, 12).map(p => `<img src="${p.img}" title="${esc(p.name)}" loading="lazy">`).join('')}</div>` : '';
+  if (cur && CONF[f.id]) parts.push(`<span class="warn">⚠ ${Object.entries(CONF[f.id]).map(([o, n]) => `"${esc(byId[o].name)}"과(와) 같은 파일 ${n}개`).join(', ')}를 바꿔요 — 목록에서 뒤에 있는 기능이 이겨요</span>`);
+  if ((f.requires || []).length) parts.push('함께 켜지는 기능: ' + f.requires.map(r => esc((byId[r] || {name: r}).name)).join(', '));
+  if (parts.length) h += `<div class="detail">${parts.join('<br>')}</div>`;
+  const easy = (f.easy || []).map(([k, v]) => `<div class="k ${k === '중요' || k === '주의' ? 'w' : ''}">${esc(k)}</div><div>${esc(v)}</div>`).join('');
+  if (easy) h += `<div class="easy">${easy}</div>`; else if (f.desc) h += `<div class="detail">${esc(f.desc)}</div>`;
+  h += mediaHtml(f, cur);
+  side.innerHTML = h;
+  if ($('pv')) drawPreview();
+}
+function paramHtml(p) {
+  const v = param(p.id, p.default);
+  if (p.kind === 'text') return `<label>${esc(p.label)}<input type="text" value="${esc(v)}" maxlength="40" oninput="setParam('${p.id}', this.value)"></label>`;
+  if (p.kind === 'num') return `<label>${esc(p.label)}<span class="ctl"><input type="range" id="pr_${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${esc(v)}" oninput="this.nextElementSibling.value=this.value;setParam('${p.id}', this.value)"><input type="number" id="pn_${p.id}" min="${p.min}" max="${p.max}" step="${p.step}" value="${esc(v)}" oninput="this.previousElementSibling.value=this.value;setParam('${p.id}', this.value)"></span></label>`;
+  return `<label>${esc(p.label)}<select onchange="setParam('${p.id}', this.value)">${p.choices.map(c => `<option ${v === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>`;
+}
+function syncParamInputs(id) { const v = S.params[id]; const r = $('pr_' + id), n = $('pn_' + id); if (r) r.value = v; if (n) n.value = v; }
+
+// ---------- 게임 화면 미리보기 (기준 화면 3840×2160 을 줄여서 그림)
+const W0 = 3840, H0 = 2160;
+const num = (id, d) => { const v = parseFloat(param(id, d)); return isNaN(v) ? d : v; };
+const D2C = {'0': '#ffffff', '1': '#ff5050', '2': '#00e000', '3': '#7070ff', '4': '#c8b475', '5': '#8a8a8a', '6': '#444', '7': '#d4c27d', '8': '#ffa500', '9': '#ffff64', ':': '#00a000', ';': '#b44cff', '/': '#ffffff', '.': '#c8b475', '<': '#00e000'};
+const MMCOL = {'노랑': '#ffff64', '빨강': '#ff5050', '주황': '#ffa500', '보라': '#b44cff', '파랑': '#7070ff', '초록': '#00e000', '흰색': '#ffffff', '금색': '#c8b475'};
+const MMARK = {'★': ['★', '★'], '!!': ['!!', '!!'], '[ ]': ['[', ']'], '없음': ['', '']};
+const FONTPX = {'작게': 44, '보통': 52, '크게': 62, '아주 크게': 72};
+// 기능마다: 색, 자리 계산(box), 끌기·크기 바꾸기를 숫자 설정으로 바꾸는 법
+const LAYERS = {
+  mini_map: {color: '#e2c27a', label: '미니맵',
+    box() { const h = num('mp_size', 23) / 100 * H0, w = h * 1.18; return {x: W0 + num('mp_x', -10) - w, y: num('mp_y', 10), w, h}; },
+    move(dx, dy) { setNum('mp_x', num('mp_x', -10) + dx, -2000, 0, 10); setNum('mp_y', num('mp_y', 10) + dy, 0, 1200, 10); },
+    resize(dx, dy) { setNum('mp_size', num('mp_size', 23) + dy / H0 * 100, 10, 40, 1); },
+    tag() { return `미니맵 ${num('mp_size', 23)}% · ${num('mp_x', -10)}, ${num('mp_y', 10)}`; },
+    draw(b) { const ib = {x: W0 + num('mp_x', -10) - 10 + num('mi_dx', 0) - b.w, y: num('mp_y', 10) + num('mp_size', 23) * 440 / 23 + num('mi_dy', 0), w: b.w};
+      return {inner: `<div style="position:absolute;inset:0;background:rgba(22,32,26,${num('mp_alpha', 100) / 100 * .85})"></div><div style="position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#f2d45c"></div>`,
+        extra: txt(ib.x, ib.y, ib.w, '07:05:55 PM<br>세계석 성채 2층<br>지옥', 'right', '#cfc6b4', 34)}; }},
+  my_level_xp: {color: '#8ec5ff', label: '레벨·경험치',
+    box() { const one = param('lx_line', '') !== '두 줄 (가운데)', fs = FONTPX[param('lx_size', '작게')] || 44, w = 1528, h = one ? fs * 1.3 : fs * 1.3 + num('lx_gap', 52);
+      return {x: W0 / 2 - 764 + num('lx_dx', 0), y: H0 - 420 + num('lx_dy', 0) - fs * .65, w, h}; },
+    move(dx, dy) { setNum('lx_dx', num('lx_dx', 0) + dx, -800, 800, 10); setNum('lx_dy', num('lx_dy', 0) + dy, -400, 200, 5); },
+    tag() { return `레벨·경험치 ${num('lx_dx', 0)}, ${num('lx_dy', 0)}`; },
+    draw(b) { const fs = (FONTPX[param('lx_size', '작게')] || 44) * .8, mode = param('lx_line', '두 줄 (가운데)');
+      const a = '93 레벨 악마술사', x = '2,154,045,980 / 2,286,478,756';
+      const inner = mode === '두 줄 (가운데)' ? `<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-size:${fs * S_}px;color:#fff">${a}<span>${x}</span></div>`
+        : mode === '양 끝' ? `<div style="position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;font-size:${fs * S_}px;color:#fff;padding:0 2%">${a}<span>${x}</span></div>`
+        : `<div style="position:absolute;inset:0;display:flex;justify-content:center;gap:4%;align-items:center;font-size:${fs * S_}px;color:#fff">${a}<span>|</span><span>${x}</span></div>`;
+      return {inner}; }},
+  party_levels: {color: '#9fd8a4', label: '파티원 레벨',
+    box() { return {x: 46 + 160 + num('pl_x', 0), y: 266 + 30 + num('pl_y', 0), w: 520, h: 300}; },
+    move(dx, dy) { setNum('pl_x', num('pl_x', 0) + dx, -400, 600, 10); setNum('pl_y', num('pl_y', 0) + dy, -100, 100, 5); },
+    tag() { return `파티원 레벨 ${num('pl_x', 0)}, ${num('pl_y', 0)}`; },
+    draw(b) { const fs = (FONTPX[param('pl_size', '작게')] || 44) * .8 * S_;
+      return {inner: `<div style="position:absolute;inset:0;font-size:${fs}px;line-height:${150 * S_}px;color:#e2c27a">82 레벨 원소술사<br>91 레벨 성기사</div>`}; }},
+  buff_icons: {color: '#f2b866', label: '버프 아이콘',
+    box() { const sz = 70 * num('bi_size', 100) / 100, gap = 80 * num('bi_gap', 100) / 100; const w = sz + gap * 3;
+      return {x: W0 / 2 - w / 2 + num('bi_dx', 0) * 20, y: H0 * .6 + num('bi_dy', 0) * 20, w, h: sz}; },
+    move(dx, dy) { setNum('bi_dx', num('bi_dx', 0) + dx / 20, -10, 10, .5); setNum('bi_dy', num('bi_dy', 0) + dy / 20, -10, 10, .5); },
+    resize(dx, dy) { setNum('bi_size', num('bi_size', 100) + dy / 70 * 100, 50, 250, 5); },
+    tag() { return `버프 아이콘 ${num('bi_dx', 0)}, ${num('bi_dy', 0)} · ${num('bi_size', 100)}%`; },
+    draw(b) { const sz = 70 * num('bi_size', 100) / 100 * S_, gap = 80 * num('bi_gap', 100) / 100 * S_;
+      return {inner: ['#6d5a2c', '#2c4f6d', '#6d2c2c', '#3a5a2c'].map((c, i) => `<div style="position:absolute;left:${i * gap}px;top:0;width:${sz}px;height:${sz}px;border-radius:3px;background:${c}"></div>`).join('')}; }},
+  monster_mods: {color: '#e58c7a', label: '몬스터 특성 줄',
+    box() { return {x: W0 / 2 - 460, y: 60, w: 920, h: 230 + monShift()}; },
+    tag() { return '몬스터 특성 줄 (자리는 고정 · 글자 크기·색만)'; },
+    draw(b) { const mk = MMARK[param('mm_marker', '★')] || MMARK['★'];
+      const line = (k, ko) => { const c = MMCOL[param('mm_color::' + k, '')]; return c ? `<span style="color:${c}">${mk[0]}${ko}${mk[1]}</span>` : ''; };
+      const mods = [line('monsteruniqueprop2', '번개 강화'), line('uniquecursed', '저주받음'), line('monsteruniqueprop6', '돌가죽'), line('monsteruniqueprop7', '다발 사격')].filter(Boolean).join(' ') || '<span style="color:#fff">번개 강화 저주받음</span>';
+      const big = {'그대로': 1, '크게': 1.25, '아주 크게': 1.45, '최대': 1.7}[param('mm_font_size', '크게')] || 1;
+      const res = '<span style="color:#ff5050">화염 0</span> · <span style="color:#7070ff">냉기 75</span> · <span style="color:#ffff64">번개 33</span>';
+      const nl = param('mm_res_nl', '다른 줄로') !== '같은 줄로';
+      return {inner: `<div style="position:absolute;inset:0;text-align:center;font-size:${30 * S_}px;line-height:1.5;color:#fff"><div style="height:${18 * S_}px;margin:${8 * S_}px 10%;background:#7a2418;border-radius:2px"></div>뒤틀린 대장 · 챔피언<br>${nl ? res + '<br>' : res + ' '}<span style="font-size:${30 * big * S_}px">${mods}</span><div style="margin-top:${(monShift() - 90 + 20) * S_}px;color:#a49c8c">면역: 냉기</div></div>`}; }},
+  exp_rainbow: {color: '#c7a6f2', label: '경험치 바',
+    box() { return {x: W0 / 2 - 760, y: H0 - 251, w: 1520, h: 18}; },
+    tag() { return '경험치 바 (기준 스킨 자리)'; },
+    draw() { return {inner: '<div style="position:absolute;inset:0;background:linear-gradient(90deg,#e5484d,#f2b866,#f2d45c,#6fcf7a,#4c9aff,#9d7bff)"></div>'}; }},
+  quick_lobby: {color: '#f0a99c', label: '대기실 버튼',
+    box() { const sc = num('ql_size', 60) / 100; return {x: W0 / 2 - 1454 + num('ql_x', 300), y: H0 - 412 + num('ql_y', -130), w: 200 * sc, h: 90 * sc}; },
+    move(dx, dy) { setNum('ql_x', num('ql_x', 300) + dx, -1000, 3000, 10); setNum('ql_y', num('ql_y', -130) + dy, -800, 400, 10); },
+    tag() { return `대기실 버튼 ${num('ql_x', 300)}, ${num('ql_y', -130)}`; },
+    draw(b) { return {inner: `<div style="position:absolute;inset:0;display:grid;place-items:center;background:#5a1f17;color:#fff;font-size:${28 * S_}px;border-radius:3px">대기실</div>`}; }},
+};
+function monShift() { const fs = {'크게': 40, '아주 크게': 55, '최대': 75}[param('mm_font_size', '크게')] || 0; return fs + (param('mm_res_nl', '다른 줄로') !== '같은 줄로' ? 50 : 0) + num('mm_gap', 0); }
+const PVPARAMS = new Set(['mp_size', 'mp_x', 'mp_y', 'mp_alpha', 'mp_zoom', 'mi_dx', 'mi_dy', 'lx_dx', 'lx_dy', 'lx_gap', 'lx_line', 'lx_size', 'pl_x', 'pl_y', 'pl_size',
+  'bi_dx', 'bi_dy', 'bi_gap', 'bi_size', 'mm_marker', 'mm_font_size', 'mm_res_nl', 'mm_gap', 'ql_x', 'ql_y', 'ql_size']);
+function setNum(id, v, lo, hi, step) {
+  const f = Object.values(byId).find(f => (f.params || []).some(p => p.id === id)); const p = f && f.params.find(p => p.id === id);
+  if (p && p.min !== undefined) { lo = +p.min; hi = +p.max; step = +p.step || step; }
+  v = Math.round(v / step) * step; v = Math.max(lo, Math.min(hi, v)); v = +v.toFixed(3);
+  S.params[id] = String(v); syncParamInputs(id);
+}
+let S_ = 1;
+function txt(x, y, w, html, align, color, fs) { return `<div class="txt" style="left:${x * S_}px;top:${y * S_}px;width:${w * S_}px;text-align:${align};color:${color};font-size:${fs * S_}px">${html}</div>`; }
+function drawPreview() {
+  const pv = $('pv'); if (!pv) return;
+  S_ = pv.clientWidth / W0;
+  let h = `<div class="hud"><div class="orb" style="left:3%;background:#8a1e1e"></div><div class="orb" style="right:3%;background:#1e2e8a"></div></div>
+    <div style="position:absolute;left:47%;top:44%;width:6%;height:14%;border-radius:40% 40% 10% 10%;background:#4a4234"></div>
+    <div style="position:absolute;left:${46 * S_}px;top:${266 * S_}px;display:flex;flex-direction:column;gap:${70 * S_}px">${[0, 1].map(() => `<div style="width:${130 * S_}px;height:${80 * S_}px;border-radius:3px;background:#3a352c"></div>`).join('')}</div>`;
+  for (const [id, L] of Object.entries(LAYERS)) {
+    if (!byId[id]) continue;
+    const on = !!S.choices[id], cur = SELF === id;
+    if (!on && !cur) continue;
+    const b = L.box(), d = L.draw ? L.draw(b) : {};
+    h += `<div class="lay ${cur ? 'cur' : ''}" data-id="${id}" tabindex="${cur ? 0 : -1}" style="left:${b.x * S_}px;top:${b.y * S_}px;width:${b.w * S_}px;height:${b.h * S_}px;border-color:${L.color};opacity:${on ? 1 : .45}">
+      ${d.inner || ''}${cur ? `<div class="tag" style="background:${L.color}">${esc(L.tag())}${on ? '' : ' · 꺼짐'}</div>${L.resize ? `<div class="h" data-h="1" style="background:${L.color}"></div>` : ''}` : ''}</div>`;
+    if (d.extra) h += d.extra;
+  }
+  pv.innerHTML = h;
+}
+// 끌어서 옮기기 · 크기 바꾸기 · 방향키
+let DRAG = null;
+document.addEventListener('pointerdown', e => {
+  const lay = e.target.closest && e.target.closest('.pv .lay'); if (!lay) return;
+  const id = lay.dataset.id;
+  if (SELF !== id) { SELF = id; renderEditor(true); return; }
+  if (!LAYERS[id].move && !e.target.dataset.h) return;
+  DRAG = {id, x: e.clientX, y: e.clientY, resize: !!e.target.dataset.h}; e.preventDefault();
+});
+document.addEventListener('pointermove', e => {
+  if (!DRAG) return;
+  const dx = (e.clientX - DRAG.x) / S_, dy = (e.clientY - DRAG.y) / S_;
+  const L = LAYERS[DRAG.id]; const before = JSON.stringify(S.params);
+  if (DRAG.resize) { if (L.resize) L.resize(dx, dy); } else if (L.move) L.move(dx, dy);
+  if (JSON.stringify(S.params) !== before) { DRAG.x = e.clientX; DRAG.y = e.clientY; drawPreview(); }
+});
+document.addEventListener('pointerup', () => { if (DRAG) { DRAG = null; queueSave(); updateRowSummary(); } });
+document.addEventListener('keydown', e => {
+  if ($('editor').classList.contains('hidden') || !$('pv') || !SELF || !LAYERS[SELF] || !LAYERS[SELF].move) return;
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  const k = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]}[e.key]; if (!k) return;
+  e.preventDefault(); const m = e.shiftKey ? 100 : 10;
+  LAYERS[SELF].move(k[0] * m, k[1] * m); drawPreview(); queueSave(); updateRowSummary();
+});
+addEventListener('resize', () => drawPreview());
+
+// ---------- 그림 · 소리 · 글꼴 · 물약 표
+function mediaHtml(f, cur) {
   const lab = l => (f.labels && f.labels[l]) || l;
   const shots = (f.shots || []).map(r => `<div class="srow"><div class="sfile">${esc(r.file)}</div><div class="scells">${
     Object.entries(r.v).map(([l, v]) => `<div class="scell">${
       v === 'empty' ? '<div class="ph">비어 있음<br>(이 버전은<br>안 보이게 함)</div>'
       : v.startsWith('same:') ? `<div class="ph same">${esc(lab(v.slice(5)))}와<br>같은 그림</div>`
-      : `<img src="${v}" loading="lazy" onclick="zoom('${v}','${esc(r.file)} · ${esc(lab(l))}')">`
+      : `<img src="${v}" loading="lazy" alt="${esc(lab(l))}" onclick="zoom('${v}','${esc(r.file)} · ${esc(lab(l))}')">`
     }<span class="lab">${esc(lab(l))}</span></div>`).join('')}</div></div>`).join('');
   const sounds = (f.sounds || []).map(r => `<div class="srow"><div class="sfile">🔊 ${esc(r.file)}</div><div class="scells">${
     Object.entries(r.v).map(([l, v]) => typeof v === 'number'
       ? `<button class="play" onclick="playSnd(this,${v})">▶ ${esc(lab(l))}</button>`
       : `<span class="sub" style="font-size:12.5px;padding:5px 4px">${esc(lab(l))}: ${v === 'empty' ? '소리 없음(꺼짐)' : esc(lab(v.slice(5))) + '와 같은 소리'}</span>`).join('')}</div></div>`).join('');
-  const media = (shots || sounds) ? `<div class="shots">${shots}${sounds}</div>` + fontsHtml(f) : fontsHtml(f);
+  const prev = (f.previews || []).length ? `<div class="prev">${f.previews.slice(0, 12).map(p => `<img src="${p.img}" title="${esc(p.name)}" alt="" loading="lazy">`).join('')}</div>` : '';
   const potion = f.kind === 'potion' ? potionTable(f, cur) : '';
-  const req = (f.requires || []).length ? `<span class="badge">필요: ${f.requires.map(r => esc(byId[r].name)).join(', ')}</span>` : '';
-  return `<div class="item ${cur ? 'sel' : ''}" id="it${idx}">
-    <div class="head"><span class="name">${esc(f.name)}</span>${one ? stBadge(one) : ''}${req}</div>
-    ${easy ? `<div class="easy">${easy}</div>` : (f.desc ? `<div class="sub">${esc(f.desc)}</div>` : '')}
-    ${potion}${media || prev}
-    <div class="opts">${opts}</div>${params}${detail}
-  </div>`;
+  const body = potion + (shots || sounds ? `<div class="shots">${shots}${sounds}</div>` : prev) + fontsHtml(f);
+  return body;
 }
-function pick(idx, oi) {
-  const f = P.features[idx];
-  setChoice(f, oi === '' ? '' : f.options[oi].key);
-  renderList(true);
-}
-function setParam(id, v) { S.params[id] = v; queueSave(); }
 function zoom(src, cap) { $('lbImg').src = src; $('lbCap').textContent = cap; $('lb').classList.remove('hidden'); }
 const audio = new Audio(); let playingBtn = null;
 function playSnd(btn, i) {
@@ -553,7 +821,6 @@ function playSnd(btn, i) {
   btn.classList.add('on'); playingBtn = btn;
 }
 audio.addEventListener('ended', () => { if (playingBtn) playingBtn.classList.remove('on'); playingBtn = null; });
-const D2C = {'0': '#ffffff', '1': '#ff5050', '2': '#00e000', '3': '#7070ff', '4': '#c8b475', '5': '#8a8a8a', '6': '#444', '7': '#d4c27d', '8': '#ffa500', '9': '#ffff64', ':': '#00a000', ';': '#b44cff', '/': '#ffffff', '.': '#c8b475', '<': '#00e000'};
 function d2text(sv) {
   let out = '', color = '#ffffff';
   for (const p of String(sv || '').split(/(ÿc.)/)) {
@@ -566,7 +833,7 @@ function potionTable(f, cur) {
   const vers = Object.keys(f.potion_names);
   const lab = l => (f.options.find(o => o.key === l) || {label: l}).label;
   const head = `<tr><th>물약</th><th>그림</th>${vers.map(l => `<th class="${cur === l ? 'on' : ''}">${esc(lab(l))}</th>`).join('')}</tr>`;
-  const rows = f.potions.map(p => `<tr><td>${esc(p.kr)}</td><td>${p.img ? `<img src="img/pot_${p.key}.webp" onerror="this.remove()">` : '-'}</td>${vers.map(l => `<td class="${cur === l ? 'on' : ''}">${d2text(f.potion_names[l][p.key])}</td>`).join('')}</tr>`).join('');
+  const rows = f.potions.map(p => `<tr><td>${esc(p.kr)}</td><td>${p.img ? `<img src="img/pot_${p.key}.webp" alt="" onerror="this.remove()">` : '-'}</td>${vers.map(l => `<td class="${cur === l ? 'on' : ''}">${d2text(f.potion_names[l][p.key])}</td>`).join('')}</tr>`).join('');
   return `<div style="overflow-x:auto"><table class="ptable">${head}${rows}</table></div>`;
 }
 const loadedFonts = new Set();
@@ -575,19 +842,19 @@ function fontsHtml(f) {
   const lab = l => (f.labels && f.labels[l]) || l;
   return f.fonts.map(r => `<div class="sfile">🔤 ${esc(r.file)}</div><div class="fontrow">${Object.entries(r.v).map(([l, b]) => {
     if (!loadedFonts.has(b)) { loadedFonts.add(b); const ff = new FontFace('fb' + b, `url(/api/sound?i=${b})`); ff.load().then(x => document.fonts.add(x)).catch(() => {}); }
-    return `<div class="fontbox"><div class="lab">${esc(lab(l))}</div><div class="smp" style="font-family:'fb${b}', sans-serif">디아블로 2 레저렉션<br>Diablo II · 조던의 반지 0123</div></div>`;
+    return `<div class="fontbox"><div class="sub">${esc(lab(l))}</div><div class="smp" style="font-family:'fb${b}', sans-serif">디아블로 2 레저렉션<br>Diablo II · 조던의 반지 0123</div></div>`;
   }).join('')}</div>`).join('');
 }
 
 (async () => {
   P = await (await fetch('/api/pack')).json();
-  P.features.forEach(f => byId[f.id] = f);
+  P.features.forEach(f => { byId[f.id] = f; for (const p of f.params || []) DEF[p.id] = p.default; });
   const st = await refresh();
   S = {choices: st.settings.choices || {}, params: st.settings.params || {}};
   renderHome();
   bisPoll();
   profList();
-  $('q').addEventListener('input', () => { clearTimeout(renderList.t); renderList.t = setTimeout(() => renderList(), 150); });
+  $('q').addEventListener('input', () => { clearTimeout(renderEditor.t); renderEditor.t = setTimeout(() => renderEditor(), 150); });
   if (st.basePath && !st.base) { const w = async () => { const s = await refresh(); if (!s.base && !s.baseErr) setTimeout(w, 500); else pollStatus(); }; w(); }
   else pollStatus();
   setInterval(() => fetch('/api/ping').catch(() => {}), 5000);
