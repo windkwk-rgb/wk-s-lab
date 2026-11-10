@@ -19,6 +19,7 @@
 | `profile.go` · `bisect.go` · `baseinfo.go` | 내 설정 · 튕김 원인 찾기 · 기준 스킨 바뀐 점 |
 | `cli.go` | 개발용 명령줄 `--build` `--status` `--diff` |
 | `install_windows.go` | 설치·제거. exe 이름에 `setup`/`설치`가 있으면 설치 프로그램(`%LOCALAPPDATA%\Programs\D2R스킨빌더`, 바로가기, HKCU 제거 등록), `--uninstall` 은 제거(내 설정은 남김) |
+| `payload.go` | 설치 파일 끝에 붙인 파일(기준 스킨 mpq) — `[exe][파일…][목록 JSON][길이][SBSETUP1]`. 설치 때 프로그램 부분만 복사하고 붙은 파일은 `기준스킨\` 에 풀어 스킨 목록에 "함께 설치"로 보여 줌. 만들기 `--make-setup` |
 | `rsrc_windows_amd64.syso` | exe 아이콘 (`tools/make_icon_syso.py` 로 다시 만듦) |
 | `sys_windows.go` · `sys_other.go` | 창·파일 고르기·오류 창 (윈도우 / 그 외는 시험용) |
 | `pack_*.go` · `blobs_*.go` | 기능 묶음 넣기. 빌드 태그 `private`(실제 묶음) · `slim`(데이터 없는 패치용 exe) |

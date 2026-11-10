@@ -59,6 +59,12 @@ func runCLI(args []string) bool {
 		}
 		fmt.Println("걸린 시간", time.Since(t0))
 		return true
+	case len(args) >= 3 && args[0] == "--make-setup": // 설치 파일 만들기: 프로그램.exe 결과_setup.exe [같이 넣을 파일...]
+		if err := makeSetup(args[1], args[2], args[3:]); err != nil {
+			fmt.Println("오류:", err)
+			os.Exit(1)
+		}
+		return true
 	case len(args) == 3 && args[0] == "--diff": // 두 mpq 의 다른 파일 목록 (개발용)
 		diffMPQ(args[1], args[2])
 		return true

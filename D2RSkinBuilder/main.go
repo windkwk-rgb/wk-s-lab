@@ -109,6 +109,10 @@ func main() {
 		return
 	}
 	cli := len(os.Args) >= 3 && strings.HasPrefix(os.Args[1], "--") && os.Args[1] != "--after-patch"
+	if cli && os.Args[1] == "--make-setup" { // 기능 묶음 없이도 되는 일
+		runCLI(os.Args[1:])
+		return
+	}
 	if !cli {
 		if f, err := os.Create(filepath.Join(dataDir, "스킨빌더_기록.txt")); err == nil {
 			log.SetOutput(f)
@@ -308,10 +312,10 @@ func compareAll() {
 // 게임 폴더 mods 아래의 스킨 mpq 목록
 func gameMods() []map[string]any {
 	var out []map[string]any
-	if settings.GameDir == "" {
-		return out
+	var dirs []os.DirEntry
+	if settings.GameDir != "" {
+		dirs, _ = os.ReadDir(filepath.Join(settings.GameDir, "mods"))
 	}
-	dirs, _ := os.ReadDir(filepath.Join(settings.GameDir, "mods"))
 	for _, d := range dirs {
 		if !d.IsDir() || strings.EqualFold(d.Name(), ModName) {
 			continue
@@ -322,6 +326,15 @@ func gameMods() []map[string]any {
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i]["name"].(string) < out[j]["name"].(string) })
+	// 설치 파일에 같이 들어 있던 기준 스킨 (스킨빌더 폴더\기준스킨)
+	files, _ := filepath.Glob(filepath.Join(bundledDir(exeDir), "*.mpq"))
+	sort.Strings(files)
+	for _, p := range files {
+		if st, err := os.Stat(p); err == nil {
+			n := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
+			out = append(out, map[string]any{"name": n + " (함께 설치)", "path": p, "size": st.Size(), "time": st.ModTime().Format("2006-01-02 15:04"), "bundled": true})
+		}
+	}
 	return out
 }
 

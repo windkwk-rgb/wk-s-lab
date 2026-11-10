@@ -237,7 +237,7 @@ function renderHome() {
   else if (st.basePath) { b.textContent = '여는 중... ' + st.basePath; b.className = 'sub'; }
   else { b.textContent = '기능을 얹을 스킨 mpq를 골라 주세요 (예: 게임폴더\\mods\\yupgoolg\\yupgoolg.mpq)'; b.className = 'sub bad'; }
   $('modChips').innerHTML = (st.mods || []).length
-    ? '<span class="sub" style="align-self:center">게임 폴더에 있는 스킨:</span>' + st.mods.map(m => `<button class="chip ${st.base && st.base.path === m.path ? 'on' : ''}" onclick='pickBase(${JSON.stringify(m.path)})'>${esc(m.name)} <span class="sub">${esc(m.time)}</span></button>`).join('')
+    ? '<span class="sub" style="align-self:center">고를 수 있는 스킨:</span>' + st.mods.map(m => `<button class="chip ${st.base && st.base.path === m.path ? 'on' : ''}" onclick='pickBase(${JSON.stringify(m.path)})'>${esc(m.name)} <span class="sub">${esc(m.time)}</span></button>`).join('')
     : '';
   $('buildBtn').disabled = !st.base || st.job.running;
   $('uninstBtn').classList.toggle('hidden', !st.installed);

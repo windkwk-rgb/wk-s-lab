@@ -70,3 +70,30 @@ func TestBuildWithSamplePack(t *testing.T) {
 	}
 	os.Remove(out)
 }
+
+func TestSetupPayload(t *testing.T) {
+	dir := t.TempDir()
+	exe := filepath.Join(dir, "prog.exe")
+	os.WriteFile(exe, []byte("MZ-프로그램"), 0644)
+	skin := filepath.Join(dir, "skin_a.mpq")
+	os.WriteFile(skin, []byte("스킨 내용"), 0644)
+	setup := filepath.Join(dir, "x_setup.exe")
+	if err := makeSetup(exe, setup, []string{skin}); err != nil {
+		t.Fatal(err)
+	}
+	idx := readPayload(setup)
+	if idx == nil || idx.ExeSize != int64(len("MZ-프로그램")) || len(idx.Files) != 1 {
+		t.Fatalf("목록이 이상해요: %+v", idx)
+	}
+	inst := filepath.Join(dir, "inst")
+	if n, err := extractPayload(setup, idx, inst); err != nil || n != 1 {
+		t.Fatal(n, err)
+	}
+	got, _ := os.ReadFile(filepath.Join(bundledDir(inst), "skin_a.mpq"))
+	if string(got) != "스킨 내용" {
+		t.Errorf("풀린 내용이 달라요: %q", got)
+	}
+	if readPayload(exe) != nil {
+		t.Error("붙은 파일이 없는 exe 를 설치 파일로 봤어요")
+	}
+}

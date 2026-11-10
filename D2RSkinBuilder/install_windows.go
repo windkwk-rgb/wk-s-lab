@@ -79,6 +79,22 @@ func copyFile(src, dst string) error {
 	return os.Rename(tmp, dst)
 }
 
+// copyProgramPart — 설치 파일 앞부분(프로그램)만 복사
+func copyProgramPart(exe string, size int64, dst string) error {
+	f, err := os.Open(exe)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	os.Remove(dst + ".old")
+	if _, err := os.Stat(dst); err == nil {
+		if err := os.Rename(dst, dst+".old"); err != nil {
+			return err
+		}
+	}
+	return copyRange(f, 0, size, dst)
+}
+
 // runSetup — 설치하고 설치된 프로그램을 켬. 처리했으면 true
 func runSetup(exe string) bool {
 	if !isSetupExe(exe) && !(len(os.Args) == 2 && os.Args[1] == "--install") {
@@ -93,9 +109,24 @@ func runSetup(exe string) bool {
 		messageBox("설치 폴더를 만들지 못했어요: "+err.Error(), 0x10)
 		return true
 	}
-	if err := copyFile(exe, target); err != nil {
+	idx := readPayload(exe) // 같이 넣은 기준 스킨이 붙어 있으면 앞부분(프로그램)만 복사
+	var err error
+	if idx != nil {
+		err = copyProgramPart(exe, idx.ExeSize, target)
+	} else {
+		err = copyFile(exe, target)
+	}
+	if err != nil {
 		messageBox("프로그램을 복사하지 못했어요. 스킨 빌더가 켜져 있으면 창을 닫고 다시 실행해 주세요.\n\n"+err.Error(), 0x10)
 		return true
+	}
+	bundled := ""
+	if idx != nil {
+		if _, err := extractPayload(exe, idx, dir); err != nil {
+			messageBox("같이 넣은 기준 스킨을 풀지 못했어요 (프로그램은 설치됐어요).\n\n"+err.Error(), 0x30)
+		} else {
+			bundled = fmt.Sprintf("\n기준 스킨 %d개도 함께 넣었어요 (첫 화면 스킨 목록에서 고르세요).", len(idx.Files))
+		}
 	}
 	// 예전에 쓰던 설정(설치 파일과 같은 폴더)이 있으면 옮겨 오기
 	for _, n := range []string{"스킨빌더_설정.json", "스킨빌더_기준스킨.json"} {
@@ -125,7 +156,7 @@ func runSetup(exe string) bool {
 	} {
 		hidden(exec.Command("reg", "add", uninstKey, "/v", kv[0], "/t", kv[1], "/d", kv[2], "/f")).Run()
 	}
-	messageBox("설치했어요.\n바탕 화면이나 시작 메뉴의 \""+appTitle+"\"로 실행할 수 있어요.\n지금 실행할게요.", 0x40)
+	messageBox("설치했어요."+bundled+"\n바탕 화면이나 시작 메뉴의 \""+appTitle+"\"로 실행할 수 있어요.\n지금 실행할게요.", 0x40)
 	startSelf(target)
 	return true
 }
