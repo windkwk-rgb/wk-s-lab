@@ -1,7 +1,8 @@
 # D2RSkinBuilder: D2RSkinBuilder/ 폴더가 바뀌어 main에 올라가면 GitHub 서버가 시험을 돌리고 exe를 빌드한다.
 # 공개 저장소에는 다른 제작자의 스킨 파일(실제 기능 묶음)이 없어서, 예제 기능 묶음(pack/sample)으로만 빌드한다.
-# 그래서 Release는 만들지 않고, 빌드 결과는 Actions 실행 화면의 Artifacts 로만 올린다.
-name: D2RSkinBuilder build
+# version.txt 버전의 Release(태그 d2rskinbuilder-v버전)가 아직 없으면 예제판 설치 파일(setup.exe)로 새로 만든다.
+# (실제 기능 묶음이 든 설치 파일은 저장소 밖에서 만들어 따로 전달)
+name: D2RSkinBuilder build & release
 
 on:
   push:
@@ -15,7 +16,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: d2rskinbuilder-release
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -41,10 +46,26 @@ jobs:
         run: |
           VER=$(tr -d ' \r\n' < version.txt)
           mkdir -p dist
-          GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H windowsgui -s -w" -o "dist/D2RSkinBuilder-sample-v$VER.exe" .
+          # 파일 이름에 setup 이 들어 있으면 실행했을 때 설치 프로그램으로 동작해요
+          GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-H windowsgui -s -w" -o "dist/D2RSkinBuilder-setup-v$VER.exe" .
           GOOS=windows GOARCH=amd64 go build -trimpath -tags slim -ldflags "-H windowsgui -s -w" -o "dist/D2RSkinBuilder-slim-v$VER.exe" .
           ls -la dist
       - uses: actions/upload-artifact@v4
         with:
           name: D2RSkinBuilder-sample
           path: D2RSkinBuilder/dist/*.exe
+      - name: Create release (새 버전일 때만)
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VER=$(tr -d ' \r\n' < version.txt)
+          TAG="d2rskinbuilder-v$VER"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "$TAG Release가 이미 있어요. D2RSkinBuilder/version.txt를 올리면 새로 만들어요."
+          else
+            gh release create "$TAG" "dist/D2RSkinBuilder-setup-v$VER.exe" \
+              --title "D2R 스킨 빌더 v$VER (예제판)" \
+              --notes "자동 빌드한 예제판 설치 파일이에요. 내려받아 실행하면 설치돼요 (관리자 권한 필요 없음, 시작 메뉴·바탕 화면 바로가기, 설정 → 앱에서 제거).
+          공개 저장소에는 다른 제작자의 스킨 파일이 없어서, 직접 만든 기능 3개(몬스터 특성 강조 · 출구 표시 고치기 · 번개 강화 강조)만 들어 있어요."
+          fi

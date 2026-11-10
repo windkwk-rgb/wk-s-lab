@@ -14,4 +14,6 @@ New-Item -ItemType Directory -Force dist | Out-Null
 $env:GOOS = 'windows'; $env:GOARCH = 'amd64'
 go build -trimpath -tags "$tags" -ldflags '-H windowsgui -s -w' -o 'dist\D2R스킨빌더.exe' .
 go build -trimpath -tags "$tags,slim" -ldflags '-H windowsgui -s -w' -o 'dist\D2R스킨빌더_slim.exe' .
-Write-Host '완성: dist\D2R스킨빌더.exe'
+# 같은 프로그램을 setup 이름으로 — 실행하면 설치 프로그램으로 동작
+Copy-Item 'dist\D2R스킨빌더.exe' 'dist\D2R스킨빌더_setup.exe' -Force
+Write-Host '완성: dist\D2R스킨빌더.exe, 설치 파일 dist\D2R스킨빌더_setup.exe'

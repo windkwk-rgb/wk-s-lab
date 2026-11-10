@@ -44,7 +44,7 @@
 
 `Go` `MPQ (직접 구현)` `embed` `HTML/JS` `Python` `GitHub Actions`
 
-[README](D2RSkinBuilder/README.md) · [동작 원리](D2RSkinBuilder/docs/ARCHITECTURE.md)
+[README](D2RSkinBuilder/README.md) · [동작 원리](D2RSkinBuilder/docs/ARCHITECTURE.md) · [내려받기](https://github.com/windkwk-rgb/wk-s-lab/releases?q=d2rskinbuilder&expanded=true)
 
 </td>
 </tr>

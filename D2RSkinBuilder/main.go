@@ -77,6 +77,9 @@ var (
 func main() {
 	exe, _ := os.Executable()
 	exeDir = filepath.Dir(exe)
+	if runUninstall(exe) || runSetup(exe) { // setup 이름의 exe = 설치 프로그램
+		return
+	}
 	if len(os.Args) == 1 && selfUpdate(exe) {
 		return
 	}

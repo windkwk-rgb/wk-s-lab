@@ -18,6 +18,8 @@
 | `patch.go` · `mpqupdate.go` · `selfupdate.go` | 패치 파일, mpq 안 업그레이드, 새 exe 바꿔치기 |
 | `profile.go` · `bisect.go` · `baseinfo.go` | 내 설정 · 튕김 원인 찾기 · 기준 스킨 바뀐 점 |
 | `cli.go` | 개발용 명령줄 `--build` `--status` `--diff` |
+| `install_windows.go` | 설치·제거. exe 이름에 `setup`/`설치`가 있으면 설치 프로그램(`%LOCALAPPDATA%\Programs\D2R스킨빌더`, 바로가기, HKCU 제거 등록), `--uninstall` 은 제거(내 설정은 남김) |
+| `rsrc_windows_amd64.syso` | exe 아이콘 (`tools/make_icon_syso.py` 로 다시 만듦) |
 | `sys_windows.go` · `sys_other.go` | 창·파일 고르기·오류 창 (윈도우 / 그 외는 시험용) |
 | `pack_*.go` · `blobs_*.go` | 기능 묶음 넣기. 빌드 태그 `private`(실제 묶음) · `slim`(데이터 없는 패치용 exe) |
 | `pack/sample/` | 공개용 예제 기능 묶음 (다른 제작자 파일 없음) |
@@ -32,7 +34,8 @@
 - 어디서나: `go test ./...`, `GOOS=windows go build -tags private -ldflags "-H windowsgui" .`
 - 리눅스에서 화면 시험: `SKINBUILDER_DIR=<설정 폴더> go run -tags private .` → `http://127.0.0.1:47651/` (파일 고르기는 환경 변수 `SKINBUILDER_PICK` 등)
 - 결과 확인: `go run -tags private . --build 기준.mpq preset out.mpq` 후 `--diff out.mpq 예전결과.mpq`
-- 자동 빌드: 루트 `.github/workflows/d2rskinbuilder.yml` — 시험 + 예제 묶음 exe 빌드만 (Release 없음. 실제 묶음은 저장소에 없으므로)
+- 자동 빌드: 루트 `.github/workflows/d2rskinbuilder.yml` — 시험 + 예제 묶음 exe 빌드, `version.txt` 버전의 Release(태그 `d2rskinbuilder-v버전`)가 없으면
+  예제판 설치 파일(`D2RSkinBuilder-setup-v버전.exe`)로 생성. 실제 묶음 설치 파일은 저장소 밖에서 `-tags private` 로 만들어 따로 전달
 
 ## 꼭 지킬 것
 
