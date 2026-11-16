@@ -42,10 +42,13 @@ docs/                  USER-GUIDE.md(자세한 사용 설명) · images/(README 
    설치 파일 나눠 주기는 HTTP 8765 (`ShareServer`).
 3. **안드로이드 Esc**: 그냥 Esc는 '뒤로 가기'가 되므로 Win+Esc를 **한 번에 눌렀다 떼기**(`UhidLink.tapMetaEsc`)로 보냄. Win을 따로 누른 채 두면 앱 서랍이 열림.
 4. **키는 누를 때 간 경로로 뗄 것** (uhid/IME 섞이면 키가 눌린 채 남아 'gggg'가 반복됨 — `keyToIme`).
-5. **매크로는 기기별 저장**: 서브 PC·태블릿 매크로는 그 기기에 저장(`macro_store`/`macro_lib`), 메인은 `macros.json`. 실행은 `only_device`로 그 기기에만.
-6. **한글 파일 이름**은 패치 zip에 넣지 않기 (윈도우 압축 해제에서 깨짐). zip을 만들 땐 UTF-8 플래그(0x800).
-7. 개인 설정 파일(`config.json`, `profiles.json`, `macros*.json`, `*.log`)과 빌드 결과물은 커밋하지 않기 (`.gitignore`).
-8. 이 폴더만으로는 Linux에서 exe·apk 빌드 확인이 어려움. Python은 `py_compile`, UI는 `node --check`로 확인하고 빌드 결과는 Actions 로그로 확인.
+5. **매크로 저장 방식**: 녹화를 끝내면 바로 목록에 자동 저장(`just_saved`로 화면에 이름 칸), 목록에서 누르면 바로 `load`.
+   매크로마다 `key`(바로 실행 키 · 다른 단축키와 겹치면 안 됨) · `repeat` · `speed` · `fav` · `used`(최근 사용)를 그 매크로 안에 저장.
+   새 명령: `settings`, `fav`, `mkey`, `mkey_clear`, `seen` — 서브 PC·태블릿 화면도 같은 명령을 씀.
+6. **매크로는 기기별 저장**: 서브 PC·태블릿 매크로는 그 기기에 저장(`macro_store`/`macro_lib`), 메인은 `macros.json`. 실행은 `only_device`로 그 기기에만.
+7. **한글 파일 이름**은 패치 zip에 넣지 않기 (윈도우 압축 해제에서 깨짐). zip을 만들 땐 UTF-8 플래그(0x800).
+8. 개인 설정 파일(`config.json`, `profiles.json`, `macros*.json`, `*.log`)과 빌드 결과물은 커밋하지 않기 (`.gitignore`).
+9. 이 폴더만으로는 Linux에서 exe·apk 빌드 확인이 어려움. Python은 `py_compile`, UI는 `node --check`로 확인하고 빌드 결과는 Actions 로그로 확인.
 
 ## 빌드 · 실행
 
@@ -67,3 +70,5 @@ docs/                  USER-GUIDE.md(자세한 사용 설명) · images/(README 
 - 디아블로2 테러존 표시 (d2emu는 허락받은 API만 가능 · d2runewizard 공개 API는 현재 존만) — 방식 결정 대기
 - 태블릿 배터리 값이 오락가락하는 문제: `BatteryManager` 우선 + 불일치 기록 추가함, 실제 기록 확인 필요
 - 통신 암호화 (지금은 비밀번호 확인만, 공용 와이파이 비권장)
+- GitHub Release에서 직접 자동 업데이트 (지금은 패치 zip을 메인 PC에 넣어야 업데이트됨)
+- 연결 느림 판단 기준(70ms·250ms·5초)은 실제 사용 후 조정 필요

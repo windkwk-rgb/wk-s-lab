@@ -26,7 +26,7 @@ input{font:inherit;color:inherit}
 .tabs button .bd{width:7px;height:7px;border-radius:50%;background:var(--bad);display:none}
 .tabs button .bd.on{display:block;animation:bl 1s infinite}.tabs button .bd.play{display:block;background:var(--ok)}
 .tab{display:none}.tab.sel{display:block}
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
 .tile{background:#20242e;border-radius:10px;padding:9px 6px 8px;text-align:center;border:1px solid transparent;min-width:0}
 button.tile:hover{border-color:var(--line2)}
 .tile small{display:block;color:var(--muted);font-size:11px}
@@ -139,6 +139,24 @@ body.conn #vConn{display:block} body.conn #vSetup{display:none}
 .mcsave{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
 .mcsave .in{flex:1}
 .mcsave .go{background:var(--accent);color:#fff;border-radius:10px;padding:0 16px;font-weight:650}
+.mset{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:0 14px 12px}
+.mset .lab{color:var(--muted);font-size:12px}
+.seg2{display:flex;background:#20242e;border-radius:8px;padding:2px}.seg2 button{padding:4px 8px;border-radius:6px;font-size:12px;color:var(--muted);font-weight:600}
+.seg2 button.sel{background:#2f3542;color:var(--text)}
+.st2{display:flex;align-items:center;gap:2px;background:#20242e;border-radius:8px;padding:2px}.st2 button{width:22px;height:22px;border-radius:6px;color:var(--muted)}
+.st2 input{width:30px;background:none;border:0;color:var(--text);text-align:center;font:inherit;font-weight:700;outline:none}
+.kchip{flex:none;display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:7px;font-size:11.5px;font-weight:700;background:#20242e;color:var(--dim);border:1px dashed rgba(255,255,255,.14);white-space:nowrap}
+.kchip:hover{color:var(--text)}.kchip.set{background:rgba(91,140,255,.16);color:#a9c3ff;border:1px solid rgba(91,140,255,.35)}
+.kchip.wait{background:var(--accent);color:#fff;border-color:var(--accent)}.kchip .kx{opacity:.6;padding:0 2px}.kchip .kx:hover{opacity:1}
+.star{flex:none;width:22px;height:22px;color:var(--dim);font-size:14px}.star.on,.star:hover{color:var(--warn)}
+.mc .row.lrow{cursor:pointer;position:relative}.mc .row.lrow:hover{background:rgba(255,255,255,.025)}
+.mc .row.lrow.cur{background:rgba(91,140,255,.08)}.mc .row.lrow.cur:before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.mtools{display:flex;gap:8px;align-items:center;padding:12px 14px 4px;border-top:1px solid var(--line)}
+.mtools .in{flex:1;height:34px}.mtools input{font-size:13px}
+.just{margin:10px 14px 2px;padding:10px 12px;border-radius:11px;background:rgba(61,220,151,.09);border:1px solid rgba(61,220,151,.25)}
+.just small{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}.just small b{color:var(--ok)}
+.just .jr{display:flex;gap:7px}.just .jr .in{flex:1;height:32px}
+.just .go{background:var(--accent);color:#fff;border-radius:9px;padding:0 14px;font-weight:650}
 .mchead{padding:10px 14px 2px;font-size:11.5px;color:var(--dim);border-top:1px solid var(--line)}
 .use{font-size:11px;color:var(--ok);background:rgba(61,220,151,.12);padding:3px 8px;border-radius:6px}
 .xb{color:var(--dim);width:26px;height:26px;border-radius:7px;display:grid;place-items:center}.xb:hover{color:var(--bad);background:#20242e}
@@ -247,15 +265,22 @@ body.vmain .tabs, body.vmain .body{display:none} body.vmain #mainView{display:bl
   <div id="mcSec" style="display:none">
     <div class="card mc">
       <div class="row"><div class="t"><b id="mcTitle">녹화된 동작 없음</b><small id="mcText"></small></div><button class="b2" id="mcNameB" onclick="mcNameCur()">이름</button><button class="b2" id="mcClear" onclick="if(confirm('지금 녹화를 지울까요? (저장한 목록은 그대로예요)'))mc('clear')">지우기</button><span class="mdot" id="mcDot"></span></div>
+      <div class="mset" id="mcSet">
+        <span class="lab">반복</span><div class="st2"><button onclick="setRep(-1)">−</button><input id="mcRep" inputmode="numeric" onchange="setRep(0,this.value)"><button onclick="setRep(1)">+</button></div>
+        <span class="lab">속도</span><div class="seg2" id="mcSpeed"><button data-v="0.5">0.5배</button><button data-v="1">1배</button><button data-v="1.5">1.5배</button><button data-v="2">2배</button></div>
+        <span class="lab">바로 실행 키</span><button class="kchip" id="mcKey" onclick="mcKey(S.macro.name)"></button>
+      </div>
       <div class="mcbtns"><button id="mcRec" onclick="mc('record')"><i></i><span>녹화</span></button><button class="play" id="mcPlay" onclick="mc('play')"><i></i><span>실행</span></button></div>
       <div class="tiles">
         <button class="tile" id="tRec" onclick="mc('capture',{which:'rec'})"><small>녹화 키</small><b id="recK"></b><em>눌러서 변경</em></button>
         <button class="tile" id="tPlay" onclick="mc('capture',{which:'play'})"><small>실행 키</small><b id="playK"></b><em>눌러서 변경</em></button>
         <button class="tile" id="tSw" onclick="mc('capture',{which:'switch'})"><small>전환 키</small><b id="swK"></b><em>눌러서 변경</em></button>
-        <div class="tile"><small>반복</small><div class="st"><button onclick="rep(-1)">−</button><input id="mcRep" inputmode="numeric" onchange="mc('repeat',{value:Math.max(0,parseInt(this.value)||0)})"><button onclick="rep(1)">+</button></div><em>0 = 계속</em></div>
       </div>
       <div class="hint" id="mcHint">키 변경: 칸을 누른 뒤 메인 PC 키보드에서 원하는 키 · Esc 취소</div>
-      <div class="mcsave"><div class="in"><input id="mcName" placeholder="지금 녹화를 이름 붙여 저장" maxlength="40" spellcheck="false" onkeydown="if(event.key==='Enter')mcSave()"></div><button class="go" onclick="mcSave()">저장</button></div>
+      <div class="just" id="mcJust" style="display:none"><small>방금 녹화한 걸 <b id="mcJustN"></b>(으)로 저장했어요 · 이름을 바꿔 둘까요?</small>
+        <div class="jr"><div class="in"><input id="mcJustI" maxlength="40" spellcheck="false" placeholder="예: 던전 입장" onkeydown="if(event.key==='Enter')justSave()"></div><button class="go" onclick="justSave()">확인</button><button class="b2" onclick="justSkip()">이대로</button></div></div>
+      <div class="mtools"><div class="in"><input id="mcQ" placeholder="매크로 이름·폴더 검색" spellcheck="false" oninput="libKey='';drawMacro(S.macro||{})"></div>
+        <div class="seg2" id="mcSort"><button data-v="used">최근</button><button data-v="name">이름</button><button data-v="saved">녹화순</button></div></div>
       <div id="mcLib"></div>
     </div>
   </div>
@@ -336,7 +361,13 @@ const trim=()=>Math.min(10,(Date.now()-focusAt)/1000+0.4);
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('sel',x===b)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('sel',t.id==='tab-'+b.dataset.t)); try{localStorage.setItem('tab',b.dataset.t)}catch(e){} });
 try{ const t=localStorage.getItem('tab'); if(t) document.querySelector(`.tabs button[data-t="${t}"]`)?.click() }catch(e){}
 async function mc(op,args){ args=args||{}; if(['record','play','stop'].includes(op)) args.trim=trim(); const ok=await api('macro',op,args); if(ok===false) toast('메인 PC와 연결된 상태에서 써 주세요'); setTimeout(refresh,150) }
-function rep(d){ const v=Math.max(0,(parseInt($('#mcRep').value)||0)+d); $('#mcRep').value=v; mc('repeat',{value:v}) }
+function setRep(d,v){ const el=$('#mcRep'); const n=Math.max(0, d?(parseInt(el.value)||0)+d:(parseInt(v)||0)); el.value=n; if(S.macro&&S.macro.name) mc('settings',{name:S.macro.name,repeat:n}) }
+function mcKey(n){ if(!n) return; mc('mkey',{name:n}); toast(`'${n}'에 붙일 키를 메인 PC 키보드에서 누르세요 (Esc = 취소)`) }
+function mcPick(i){ const n=S.macro.library[i].name; if(n!==S.macro.name) mc('load',{name:n}) }
+function justSave(){ const o=S.macro.just_saved, n=$('#mcJustI').value.trim(); if(!o) return; if(!n){ justSkip(); return }
+  if ((S.macro.library||[]).some(x=>x.name===n)){ toast('같은 이름이 이미 있어요'); return } mc('rename',{name:o,new:n}); toast(`'${n}'(으)로 저장했어요`) }
+function justSkip(){ mc('seen'); $('#mcJust').style.display='none' }
+function libSort(){ try{ return localStorage.getItem('msort')||'used' }catch(e){ return 'used' } }
 function mcNameCur(){ const o=S.macro.name||'', n=(prompt(o?'새 이름':'이 녹화의 이름 (이름을 붙이면 목록에 저장돼요)',o)||'').trim(); if(!n||n===o) return;
   if (o) mc('rename',{name:o,new:n}); else mc('save',{name:n}); toast(o?'이름을 바꿨어요':`'${n}'(으)로 저장했어요`) }
 function mcRename(i){ const o=S.macro.library[i].name, n=(prompt('새 이름',o)||'').trim(); if(!n||n===o) return;
@@ -400,26 +431,50 @@ function drawMacro(m){
   $('#recK').textContent=R; $('#playK').textContent=P; $('#swK').textContent=m.switch_name;
   for (const [w,T] of [['rec','#tRec'],['play','#tPlay'],['switch','#tSw']]){
     const on=m.capture===w; $(T).classList.toggle('wait',on); $(T).querySelector('em').textContent=on?'키를 누르세요…':'눌러서 변경' }
-  $('#mcHint').textContent = m.capture ? '메인 PC 키보드에서 원하는 키를 누르세요 · Esc 취소' : `A·B를 정하면 ${m.switch_name} 키로 번갈아 바꿔요 · 안 정하면 저장한 순서대로`;
   $('#mcClear').style.display=$('#mcNameB').style.display=(m.count&&!m.recording&&!m.playing)?'':'none';
-  const inp=$('#mcRep'); if(document.activeElement!==inp) inp.value=m.repeat;
+  $('#mcHint').textContent = m.capture ? '메인 PC 키보드에서 원하는 키를 누르세요 · Esc 취소' : '녹화하면 바로 저장돼요 · 목록에서 누르면 바로 선택 · 매크로마다 바로 실행 키를 붙일 수 있어요';
+  const L=m.library||[], cur=L.find(x=>x.name===m.name);
+  $('#mcSet').style.display = cur ? '' : 'none';
+  if (cur){ const inp=$('#mcRep'); if(document.activeElement!==inp) inp.value=cur.repeat;
+    $('#mcSpeed').querySelectorAll('button').forEach(b=>b.classList.toggle('sel', parseFloat(b.dataset.v)===cur.speed));
+    const w=m.capture==='mkey'&&m.capture_name===cur.name, k=$('#mcKey');
+    k.className='kchip'+(cur.key_name?' set':'')+(w?' wait':''); k.textContent = w?'키를 누르세요…':(cur.key_name||'+ 정하기') }
+  const jb=$('#mcJust');
+  if (m.just_saved){ if (jb.style.display==='none' || $('#mcJustN').textContent!==m.just_saved){ jb.style.display=''; $('#mcJustN').textContent=m.just_saved; $('#mcJustI').value='' } }
+  else jb.style.display='none';
+  const q=$('#mcQ').value.trim().toLowerCase(), sort=libSort();
+  $('#mcSort').querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b.dataset.v===sort));
   let fk=''; try{ fk=localStorage.getItem('folds')||'' }catch(e){}
-  const lk=JSON.stringify([m.library,m.name])+fk; if(lk===libKey) return; libKey=lk;
-  const L=m.library||[], box=$('#mcLib');
-  if(!L.length){ box.innerHTML='<div class="mchead" style="padding-bottom:12px">이 PC에서 저장한 매크로가 여기에 쌓여요</div>'; return }
-  const rowOf=([x,i])=>`<div class="row"><div class="t"><b>${esc(x.name)}</b><small>동작 ${x.count}개 · ${x.dur}초 · ${esc(x.saved)}</small></div>
-    <span class="ab"><button class="${x.slot==='A'?'on':''}" onclick="mc('slot',{name:S.macro.library[${i}].name,slot:'A'})">A</button><button class="${x.slot==='B'?'on':''}" onclick="mc('slot',{name:S.macro.library[${i}].name,slot:'B'})">B</button></span>
-    ${x.name===m.name?'<span class="use">사용 중</span>':`<button class="b2" onclick="mc('load',{name:S.macro.library[${i}].name})">불러오기</button>`}
-    <button class="xb" title="폴더로 옮기기" onclick="mcFolder(${i})"><svg width="13" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M1.5 3h3.5l1.1 1.3h5.4v6.2h-10z"/></svg></button>
-    <button class="xb" title="이름 바꾸기" onclick="mcRename(${i})"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8.5 2l1.6 1.6L4.3 9.4 2 10l.6-2.3L8.5 2z"/></svg></button>
-    <button class="xb" title="삭제" onclick="if(confirm('삭제할까요?'))mc('delete',{name:S.macro.library[${i}].name})"><svg width="11" height="11"><path d="M1.5 1.5l8 8m0-8l-8 8" stroke="currentColor" stroke-width="1.4"/></svg></button></div>`;
-  const G={}; L.forEach((x,i)=>{ (G[x.folder||'']||=[]).push([x,i]) });
+  const lk=JSON.stringify([m.library,m.name,m.capture,m.capture_name,q,sort])+fk; if(lk===libKey) return; libKey=lk;
+  const box=$('#mcLib');
+  if(!L.length){ box.innerHTML='<div class="mchead" style="padding-bottom:12px">녹화하면 여기에 바로 저장돼요</div>'; return }
+  const idx=L.map((x,i)=>[x,i]);
+  idx.sort({used:(a,b)=>b[0].used.localeCompare(a[0].used), saved:(a,b)=>b[0].saved.localeCompare(a[0].saved), name:(a,b)=>a[0].name.localeCompare(b[0].name,'ko')}[sort]);
+  const chip=(x,i)=>{ const w=m.capture==='mkey'&&m.capture_name===x.name;
+    return `<button class="kchip ${x.key_name?'set':''} ${w?'wait':''}" title="이 매크로만 바로 실행하는 키" onclick="event.stopPropagation();mcKey(S.macro.library[${i}].name)">${w?'키를 누르세요…':x.key_name?esc(x.key_name)+`<span class="kx" title="키 지우기" onclick="event.stopPropagation();mc('mkey_clear',{name:S.macro.library[${i}].name})">×</span>`:'+ 키'}</button>` };
+  const rowOf=([x,i])=>`<div class="row lrow ${x.name===m.name?'cur':''}" onclick="mcPick(${i})">
+    <button class="star ${x.fav?'on':''}" onclick="event.stopPropagation();mc('fav',{name:S.macro.library[${i}].name})">${x.fav?'★':'☆'}</button>
+    <div class="t"><b ondblclick="event.stopPropagation();mcRename(${i})">${esc(x.name)}</b><small>동작 ${x.count}개 · ${x.dur}초${x.repeat!==1?` · ${x.repeat===0?'계속 반복':x.repeat+'번'}`:''}${x.speed!==1?` · ${x.speed}배`:''} · ${esc(x.used.slice(5,16))}</small></div>
+    ${x.name===m.name?'<span class="use">사용 중</span>':''}${chip(x,i)}
+    <span class="ab" onclick="event.stopPropagation()"><button class="${x.slot==='A'?'on':''}" onclick="mc('slot',{name:S.macro.library[${i}].name,slot:'A'})">A</button><button class="${x.slot==='B'?'on':''}" onclick="mc('slot',{name:S.macro.library[${i}].name,slot:'B'})">B</button></span>
+    <button class="xb" title="폴더로 옮기기" onclick="event.stopPropagation();mcFolder(${i})"><svg width="13" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M1.5 3h3.5l1.1 1.3h5.4v6.2h-10z"/></svg></button>
+    <button class="xb" title="이름 바꾸기" onclick="event.stopPropagation();mcRename(${i})"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8.5 2l1.6 1.6L4.3 9.4 2 10l.6-2.3L8.5 2z"/></svg></button>
+    <button class="xb" title="삭제" onclick="event.stopPropagation();if(confirm('삭제할까요?'))mc('delete',{name:S.macro.library[${i}].name})"><svg width="11" height="11"><path d="M1.5 1.5l8 8m0-8l-8 8" stroke="currentColor" stroke-width="1.4"/></svg></button></div>`;
+  const head=`<div class="mchead" style="display:flex;align-items:center">저장한 매크로 ${L.length}개 · 누르면 바로 선택<button class="delall" onclick="if(confirm('이 PC에서 저장한 매크로를 모두 삭제할까요? 되돌릴 수 없어요.'))mc('delete_all')">전체 삭제</button></div>`;
+  if (q){ const hit=idx.filter(([x])=>x.name.toLowerCase().includes(q)||(x.folder||'').toLowerCase().includes(q));
+    box.innerHTML=head+(hit.length?hit.map(rowOf).join(''):'<div class="mchead" style="border:0;padding:8px 14px 14px">찾는 매크로가 없어요</div>'); return }
+  const favs=idx.filter(([x])=>x.fav), rest=idx.filter(([x])=>!x.fav);
+  const G={}; rest.forEach(p=>{ (G[p[0].folder||'']||=[]).push(p) });
   const F=Object.keys(G).sort((a,b)=>a===''?1:b===''?-1:a.localeCompare(b,'ko'));
-  box.innerHTML=`<div class="mchead" style="display:flex;align-items:center">저장한 매크로 ${L.length}개<button class="delall" onclick="if(confirm('이 PC에서 저장한 매크로를 모두 삭제할까요? 되돌릴 수 없어요.'))mc('delete_all')">전체 삭제</button></div>`
-    + F.map(f=>{ if(f===''&&F.length===1) return G[f].map(rowOf).join('');
-        const closed=fClosed(f);
-        return `<div class="fold ${closed?'closed':''}"><button class="fhead" onclick="fToggle('${esc(f)}')"><span class="car">›</span><b>${esc(f||'폴더 없음')}</b><small>${G[f].length}개</small>${f?`<span class="fren" onclick="event.stopPropagation();fRename('${esc(f)}')">이름 바꾸기</span>`:''}</button><div class="fbody">${G[f].map(rowOf).join('')}</div></div>` }).join('');
+  const fold=(f,list,title,fav)=>{ const closed=fClosed(f);
+    return `<div class="fold ${closed?'closed':''}"><button class="fhead" onclick="fToggle('${esc(f)}')"><span class="car">›</span>${fav?'<span style="color:var(--warn)">★</span>':''}<b ${fav?'style="color:var(--warn)"':''}>${esc(title)}</b><small>${list.length}개</small>${f&&!fav?`<span class="fren" onclick="event.stopPropagation();fRename('${esc(f)}')">이름 바꾸기</span>`:''}</button><div class="fbody">${list.map(rowOf).join('')}</div></div>` };
+  let html = favs.length ? fold('★fav',favs,'즐겨찾기',true) : '';
+  if (F.length===1 && F[0]==='' && !favs.length) html += G[''].map(rowOf).join('');
+  else html += F.map(f=>fold(f,G[f],f||'폴더 없음')).join('');
+  box.innerHTML = head + html;
 }
+document.querySelectorAll('#mcSort button').forEach(b=>b.onclick=()=>{ try{ localStorage.setItem('msort',b.dataset.v) }catch(e){}; libKey=''; drawMacro(S.macro||{}) });
+document.querySelectorAll('#mcSpeed button').forEach(b=>b.onclick=()=>{ if(S.macro&&S.macro.name) mc('settings',{name:S.macro.name,speed:parseFloat(b.dataset.v)}) });
 function fClosed(f){ try{ return JSON.parse(localStorage.getItem('folds')||'{}')[f] }catch(e){ return false } }
 function fToggle(f){ let o={}; try{ o=JSON.parse(localStorage.getItem('folds')||'{}') }catch(e){}; o[f]=!o[f]; try{ localStorage.setItem('folds',JSON.stringify(o)) }catch(e){}; libKey=''; drawMacro(S.macro||{}) }
 function mcFolder(i){ const x=S.macro.library[i], ex=[...new Set(S.macro.library.map(y=>y.folder).filter(Boolean))];

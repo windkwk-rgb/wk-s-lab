@@ -168,12 +168,13 @@ def overlay_text(m):
     off = m.get("keys_on") is False
     if not name:
         return ("매크로 키 꺼짐", "idle") if off else ("", "idle")
-    return f"매크로  {('[' + slot + '] ') if slot else ''}{name}{'  · 키 꺼짐' if off else ''}", "idle"
+    tag = m.get("cur_key_name") or slot                 # 바로 실행 키가 있으면 그 키를, 없으면 A/B
+    return f"매크로  {('[' + tag + '] ') if tag else ''}{name}{'  · 키 꺼짐' if off else ''}", "idle"
 
 
 class MacroOverlay:
     """게임 화면 위에도 보이는 작은 표시줄 (항상 위 · 마우스 클릭은 아래 창으로 통과)"""
-    COLORS = {"idle": "#c9d1dc", "rec": "#ff7b7b", "play": "#5fe3a8"}
+    COLORS = {"idle": "#c9d1dc", "rec": "#ff7b7b", "play": "#5fe3a8", "warn": "#ffcf5c"}
 
     def __init__(self):
         import queue

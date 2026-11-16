@@ -9,6 +9,7 @@ KVM 서버 (Windows, 메인 PC)
 실행:  python server.py      (콘솔 없이: pythonw server.py)
 """
 import base64
+import collections
 import ctypes
 import hashlib
 import json
@@ -287,7 +288,9 @@ class Macro:
         self.last_dev = MAIN_DEV      # 마지막으로 녹화·실행·불러온 기기
         self.t0 = 0.0
         self.capture = None
+        self.capture_arg = None       # 매크로별 키 정할 때: (기기, 매크로 이름)
         self.capture_until = 0.0
+        self.just_saved = None        # 방금 녹화해서 자동 저장한 것 {"dev","name","at"} → 화면에서 이름 칸을 바로 열어 줌
         self.pos = {}                 # 실행 중 기기별 커서 위치 (사용자 마우스와 따로)
         self.click_logs = 0
         self.data = {}                # 기기 → {"library": {이름: {"events","saved"}}, "current": {"events","name"}, "slots": [A, B]}
@@ -423,19 +426,105 @@ class Macro:
         self.changed()
         return "ok"
 
-    def load(self, dev, name):
+    @staticmethod
+    def _unique(lib, base):
+        name, i = base, 2
+        while name in lib:
+            name, i = f"{base} ({i})", i + 1
+        return name
+
+    def _item(self, dev, name=None):
+        """그 기기의 저장된 매크로 (이름이 없으면 지금 선택된 것)"""
+        b = self._blob(dev)
+        name = name if name is not None else b["current"].get("name")
+        return b["library"].get(name) if name else None
+
+    def load(self, dev, name, quiet=False):
+        """목록에서 누르면 바로 '지금 매크로'로 (실행 키·전용 키에 바로 연결)"""
         b = self._blob(dev)
         if name not in b["library"]:
             return "없는 매크로예요"
-        if self.recording or dev in self.players:
-            return "녹화·실행을 먼저 멈춰 주세요"
+        if self.recording and self.rec_dev == dev:
+            return "녹화를 먼저 끝내 주세요"
+        if dev in self.players:
+            self.stop_play(dev)
         b["current"] = {"events": list(b["library"][name]["events"]), "name": name}
+        b["library"][name]["used"] = time.strftime("%Y-%m-%d %H:%M:%S")
         self.last_dev = dev
         self.persist(dev)
-        n, dur = self._summary(b["current"]["events"])
-        self.tell(f"'{name}' 불러옴 · 동작 {n}개 · {hotkey_name(self.keys()[1])} 키로 실행")
+        if not quiet:
+            n, dur = self._summary(b["current"]["events"])
+            self.tell(f"'{name}' 선택 · 동작 {n}개 · {hotkey_name(self.keys()[1])} 키로 실행")
         self.changed()
         return "ok"
+
+    def set_settings(self, dev, name, repeat=None, speed=None):
+        """매크로마다 반복 횟수(0 = 멈출 때까지)와 속도를 따로 기억"""
+        it = self._item(dev, name)
+        if it is None:
+            return "없는 매크로예요"
+        if repeat is not None:
+            it["repeat"] = max(0, min(9999, int(repeat)))
+        if speed is not None:
+            sp = float(speed)
+            it["speed"] = sp if sp in (0.5, 1.0, 1.5, 2.0, 3.0) else 1.0
+        self.persist(dev)
+        self.changed()
+        return "ok"
+
+    def toggle_fav(self, dev, name):
+        it = self._item(dev, name)
+        if it is None:
+            return "없는 매크로예요"
+        if it.get("fav"):
+            it.pop("fav", None)
+        else:
+            it["fav"] = True
+        self.persist(dev)
+        self.changed()
+        return "ok"
+
+    # --- 매크로마다 바로 실행 키 (누르면 그 매크로를 그 기기에서 바로 실행 · 실행 중에 다시 누르면 멈춤)
+    def mkey_lookup(self, vk):
+        for dev, b in list(self.data.items()):
+            for name, it in list((b.get("library") or {}).items()):
+                if it.get("key") == vk:
+                    return dev, name
+        return None
+
+    def _drop_mkey(self, vk, keep=None):
+        """다른 매크로에 붙어 있던 같은 키 떼기"""
+        touched = set()
+        for dev, b in list(self.data.items()):
+            for name, it in (b.get("library") or {}).items():
+                if it.get("key") == vk and (dev, name) != keep:
+                    it.pop("key", None)
+                    touched.add(dev)
+        for dev in touched:
+            self.persist(dev)
+
+    def clear_mkey(self, dev, name):
+        it = self._item(dev, name)
+        if it is None:
+            return "없는 매크로예요"
+        it.pop("key", None)
+        self.persist(dev)
+        self.changed()
+        return "ok"
+
+    def run_mkey(self, dev, name):
+        if dev != MAIN_DEV and dev not in self.s.clients:
+            return self.tell(f"{dev} 연결이 없어요")
+        if self.recording:
+            return self.tell("녹화 중이에요 · 녹화를 먼저 끝내 주세요")
+        b = self._blob(dev)
+        if dev in self.players:
+            same = b["current"].get("name") == name
+            self.stop_play(dev)
+            if same:                                   # 같은 키를 다시 누르면 멈춤
+                return
+        if self.load(dev, name, quiet=True) == "ok":
+            self.toggle_play(dev, explicit=True)
 
     def set_slot(self, dev, name, slot):
         b = self._blob(dev)
@@ -522,6 +611,8 @@ class Macro:
             return "같은 이름이 이미 있어요"
         b["library"][new] = b["library"].pop(old)
         b["slots"] = [new if x == old else x for x in b["slots"]]
+        if self.just_saved and self.just_saved["dev"] == dev and self.just_saved["name"] == old:
+            self.just_saved = None                     # 이름을 정했으니 '방금 저장' 표시 끝
         if b["current"].get("name") == old:
             b["current"]["name"] = new
         self.persist(dev)
@@ -562,8 +653,11 @@ class Macro:
             c, dur = self._summary(d.get("events", []))
             out.append({"name": n, "count": c, "dur": round(dur, 1), "saved": d.get("saved", ""),
                         "dev": dev, "slot": "A" if sl[0] == n else "B" if sl[1] == n else None,
-                        "folder": d.get("folder", "")})
-        return sorted(out, key=lambda x: x["saved"], reverse=True)
+                        "folder": d.get("folder", ""), "fav": bool(d.get("fav")),
+                        "used": d.get("used", "") or d.get("saved", ""),
+                        "key": d.get("key"), "key_name": hotkey_name(d["key"]) if d.get("key") else None,
+                        "repeat": int(d.get("repeat", 1)), "speed": float(d.get("speed", 1.0))})
+        return sorted(out, key=lambda x: x["used"], reverse=True)        # 최근에 쓴 것부터
 
     def devices(self):
         """매크로가 있거나 지금 연결된 기기 (메인 PC 설정 창의 기기 선택용)"""
@@ -622,10 +716,13 @@ class Macro:
             self.switch(dev)
 
     # --- 단축키 바꾸기: 설정 창에서 '변경'을 누른 뒤 아무 키나 누르면 그 키로 (Esc = 취소)
-    def start_capture(self, which):
-        if which not in self.KEY_CFG and which != "toggle" and not str(which).startswith(("dplay:", "dswitch:")):
+    def start_capture(self, which, arg=None):
+        if which not in self.KEY_CFG and which not in ("toggle", "mkey") and not str(which).startswith(("dplay:", "dswitch:")):
+            return False
+        if which == "mkey" and (not arg or self._item(*arg) is None):
             return False
         self.capture = which
+        self.capture_arg = arg
         self.capture_until = time.time() + 15
         self.changed()
         return True
@@ -642,6 +739,23 @@ class Macro:
             return True
         cfg = self.s.cfg
         cur = {"macro_rec_vk": self.keys()[0], "macro_play_vk": self.keys()[1], "macro_switch_vk": self.switch_key()}
+        ret = int(cfg.get("return_hotkey_vk", 0))
+        if which == "mkey":                              # 매크로마다 바로 실행 키
+            dev, name = self.capture_arg
+            it = self._item(dev, name)
+            if it is None:
+                pass
+            elif vk in cur.values() or vk == self.toggle_key() or self.devkey_lookup(vk) or \
+                    ((ret & 0xFFFF) == vk and not (ret & COMBO)):
+                threading.Thread(target=self.tell, args=(f"{hotkey_name(vk)}는 이미 다른 단축키로 쓰고 있어요",), daemon=True).start()
+            else:
+                self._drop_mkey(vk, keep=(dev, name))
+                it["key"] = vk
+                self.persist(dev)
+                threading.Thread(target=self.tell, args=(f"'{name}' 바로 실행 키를 {hotkey_name(vk)}(으)로 정했어요",), daemon=True).start()
+            self.changed()
+            return True
+        self._drop_mkey(vk)                              # 다른 단축키로 정하면 매크로 키에서는 빠짐
         if which == "toggle":                            # 매크로 키 켜기/끄기 키
             if vk in cur.values() or self.devkey_lookup(vk):
                 threading.Thread(target=self.tell, args=(f"{hotkey_name(vk)}는 이미 매크로 키로 쓰고 있어요",), daemon=True).start()
@@ -693,8 +807,11 @@ class Macro:
         b = self._blob(dev)
         cur = b["current"]
         n, dur = self._summary(cur.get("events") or [])
-        rep = int(self.s.cfg.get("macro_repeat", 1))
         cname = cur.get("name")
+        it = b["library"].get(cname) if cname else None
+        rep = int(it.get("repeat", 1)) if it else int(self.s.cfg.get("macro_repeat", 1))
+        js = self.just_saved
+        just = js["name"] if js and js["dev"] == dev and time.time() - js["at"] < 120 and js["name"] in b["library"] else None
         cur_slot = "A" if cname and b["slots"][0] == cname else "B" if cname and b["slots"][1] == cname else None
         pl = self.players.get(dev)
         dk = self.dev_keys().get(dev) or {}
@@ -709,6 +826,10 @@ class Macro:
                 "switch_name": hotkey_name(self.switch_key()),
                 "rec_name": hotkey_name(self.keys()[0]), "play_name": hotkey_name(self.keys()[1]),
                 "name": cname, "cur_slot": cur_slot, "overlay": bool(self.s.cfg.get("macro_overlay", True)),
+                "cur_key_name": hotkey_name(it["key"]) if it and it.get("key") else None,
+                "speed": float(it.get("speed", 1.0)) if it else 1.0, "just_saved": just,
+                "capture_name": self.capture_arg[1] if self.capture == "mkey" and self.capture_arg
+                and self.capture_arg[0] == dev else None,
                 "overlay_pos": self.s.cfg.get("overlay_pos", "tl"),
                 "library": self.entries(dev)}
 
@@ -774,12 +895,20 @@ class Macro:
             kept = self.only_device(self.events, dev)
             if len(kept) < len(self.events):
                 print(f"[매크로] 녹화 중 다른 기기로 넘어간 동작 {len(self.events) - len(kept)}개는 뺐어요")
-            self._blob(dev)["current"] = {"events": kept, "name": None}
+            b = self._blob(dev)
+            name = None
+            if len(kept) > 1:                  # 녹화하면 바로 목록에 저장 (이름은 나중에 바꾸면 됨)
+                now = time.strftime("%Y-%m-%d %H:%M:%S")
+                name = self._unique(b["library"], "녹화 " + time.strftime("%m-%d %H:%M"))
+                b["library"][name] = {"events": list(kept), "saved": now[:16], "used": now}
+                self.just_saved = {"dev": dev, "name": name, "at": time.time()}
+            b["current"] = {"events": kept, "name": name}
             self.events = []
         self.last_dev = dev
         self.persist(dev)
         n, dur = self.summary(dev)
-        self.tell(f"녹화 끝 · 동작 {n}개 · {dur:.1f}초 · {hotkey_name(self.keys()[1])} 키로 실행")
+        self.tell(f"녹화 끝 · '{name}'(으)로 저장 · 동작 {n}개 · {dur:.1f}초 · {hotkey_name(self.keys()[1])} 키로 실행"
+                  if name else "녹화 끝 · 녹화된 동작이 없어요")
         self.changed()
 
     def summary(self, dev):
@@ -820,7 +949,13 @@ class Macro:
         if dev in self.players:
             return
         events = self.only_device(events, dev)
-        st = {"stop": threading.Event(), "round": 0}
+        it = self._item(dev)
+        if it is not None:
+            it["used"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            threading.Thread(target=self.persist, args=(dev,), daemon=True).start()
+        st = {"stop": threading.Event(), "round": 0,
+              "repeat": int(it.get("repeat", 1)) if it else int(self.s.cfg.get("macro_repeat", 1)),
+              "speed": max(0.25, float(it.get("speed", 1.0))) if it else 1.0}
         st["thread"] = threading.Thread(target=self._play, args=(events, dev, st), daemon=True)
         self.players[dev] = st
         self.last_dev = dev
@@ -860,12 +995,14 @@ class Macro:
                 st["thread"].join(timeout=2)
 
     def _play(self, events, dev, st):
-        rep = int(self.s.cfg.get("macro_repeat", 1))
+        rep = st["repeat"]
+        speed = st["speed"]
         held = {}
         stop = st["stop"]
         self.click_logs = 0
         who = "" if dev == MAIN_DEV else f"{dev} · "
-        self.tell(who + "실행 시작" + (" · 멈출 때까지 반복" if rep <= 0 else (f" · {rep}번" if rep > 1 else "")))
+        self.tell(who + "실행 시작" + (" · 멈출 때까지 반복" if rep <= 0 else (f" · {rep}번" if rep > 1 else ""))
+                  + (f" · {speed:g}배 빠르게" if speed > 1 else f" · {speed:g}배 느리게" if speed < 1 else ""))
         stopped = False
         try:
             while rep <= 0 or st["round"] < rep:
@@ -874,7 +1011,7 @@ class Macro:
                 cur = None
                 for e in events:
                     while True:
-                        left = start + e[0] - time.perf_counter()
+                        left = start + e[0] / speed - time.perf_counter()
                         if left <= 0:
                             break
                         if stop.wait(min(left, 0.02)):
@@ -887,7 +1024,7 @@ class Macro:
                     if cur is False:
                         return
                 if rep <= 0 or st["round"] < rep:
-                    if stop.wait(0.3):
+                    if stop.wait(0.3 / speed):
                         stopped = True
                         return
         except Exception as ex:
@@ -964,9 +1101,23 @@ class Macro:
             return self.toggle_keys() or "ok"
         if op == "devkey_clear":
             return self.clear_devkey(dev, msg.get("which", "play"))
-        if op == "repeat":
+        if op == "repeat":                              # 예전 앱: 지금 매크로의 반복 횟수로
+            if self._item(dev) is not None:
+                return self.set_settings(dev, self._blob(dev)["current"]["name"], repeat=msg.get("value", 1))
             self.s.cfg["macro_repeat"] = max(0, min(9999, int(msg.get("value", 1))))
             self.s.save()
+            self.changed()
+            return "ok"
+        if op == "settings":
+            return self.set_settings(dev, msg.get("name", ""), msg.get("repeat"), msg.get("speed"))
+        if op == "fav":
+            return self.toggle_fav(dev, msg.get("name", ""))
+        if op == "mkey":                                # 이 매크로의 바로 실행 키 정하기 (다음에 누르는 키)
+            return self.start_capture("mkey", (dev, msg.get("name", ""))) and "ok"
+        if op == "mkey_clear":
+            return self.clear_mkey(dev, msg.get("name", ""))
+        if op == "seen":                                # 화면에서 '방금 저장' 표시를 닫음
+            self.just_saved = None
             self.changed()
             return "ok"
         return None
@@ -1126,9 +1277,17 @@ class Client:
         self.pending_move = None
         self.pending_rmove = None
         self.alive = True
+        self.slow = False                      # 와이파이가 느린 상태인지 (응답 시간으로 판단)
+        self.rtt_hist = collections.deque(maxlen=4)
+        self.last_pong = time.time()
+        self.last_mv = 0.0                     # 마지막으로 이동을 보낸 시각
         threading.Thread(target=self._sender, daemon=True).start()
 
     _MOVE = object()   # "최신 이동 좌표를 보내라" 표시
+    try:     # 윈도우의 짧은 대기(sleep)를 1ms 단위로 정확하게 (기본은 15ms까지 늘어남)
+        ctypes.windll.winmm.timeBeginPeriod(1)
+    except Exception:
+        pass
     _RMOVE = object()  # "쌓인 상대 이동량을 보내라" 표시
 
     def send(self, obj):
@@ -1162,6 +1321,14 @@ class Client:
                 obj = self.q.get()
                 if obj is None:
                     break
+                if obj is Client._RMOVE or obj is Client._MOVE:
+                    # 이동 신호를 너무 촘촘히 보내지 않음: 평소 1초 250번, 느릴 땐 60번.
+                    # 기다리는 동안 들어온 이동은 하나로 합쳐져서 와이파이가 덜 붐비고 커서가 덜 끊김
+                    gap = (1 / 60) if self.slow else (1 / 250)
+                    wait = gap - (time.perf_counter() - self.last_mv)
+                    if wait > 0:
+                        time.sleep(wait)
+                    self.last_mv = time.perf_counter()
                 if obj is Client._RMOVE:
                     with self.mlock:
                         obj, self.pending_rmove = self.pending_rmove, None
@@ -1216,6 +1383,7 @@ class Server:
         self.notify_cb = None         # 트레이 알림 (설정 창이 켜지면 연결)
         self.overlay = None           # 화면 위 매크로 이름 표시
         self.bat_overlay = None       # 화면 위 기기 배터리 표시
+        self.net_overlay = None       # 화면 위 '연결 느림' 표시
         cfg.setdefault("macro_repeat", 1)
         if "macro_rec_vk" not in cfg:
             i = int(cfg.get("macro_keys", 0))
@@ -1273,6 +1441,52 @@ class Server:
                     except Exception:
                         pass
                 break
+
+    # ---------- 연결 상태 (와이파이 느림 알림)
+    def check_net(self, c):
+        """최근 응답 시간으로 느림/좋아짐 판단 (바로 왔다 갔다 하지 않게 기준을 둘로)"""
+        h = list(c.rtt_hist)[-3:]
+        late = time.time() - c.last_pong > 5
+        if not c.slow:
+            bad = late or (len(h) >= 2 and sorted(h)[len(h) // 2] > 70) or (h and max(h) > 250)
+            if bad:
+                c.slow = True
+                self.on_net_change(c, late)
+        else:
+            if not late and len(h) >= 3 and max(h) < 45:
+                c.slow = False
+                self.on_net_change(c, False)
+
+    def on_net_change(self, c, late):
+        ms = "응답 없음" if late else f"{round(c.rtt or 0)}ms"
+        print(f"[연결] {c.name}: {'느림 ' + ms if c.slow else '다시 좋아짐'}")
+        if self.cfg.get("net_warn", True):
+            now = time.time()
+            if c.slow and now - getattr(c, "net_toast_at", 0) > 60:          # 알림은 1분에 한 번까지
+                c.net_toast_at = now
+                c.send({"t": "toast", "text": f"와이파이 연결이 느려요 ({ms}) · 마우스가 끊길 수 있어요"})
+            elif not c.slow and getattr(c, "net_toast_at", 0):
+                c.send({"t": "toast", "text": "와이파이 연결이 다시 좋아졌어요"})
+        self.update_net_overlay()
+
+    def update_net_overlay(self):
+        """메인 PC 화면 아래 가운데에 느린 기기 표시 (좋아지면 사라짐)"""
+        with self.lock:
+            slow = [(c.name, c.rtt, time.time() - c.last_pong > 5) for c in self.clients.values() if c.slow]
+        text = ""
+        if slow and self.cfg.get("net_warn", True):
+            text = "📶  " + "   ".join(f"{n} 연결 느림 {'(응답 없음)' if late else f'{round(r or 0)}ms'}"
+                                     for n, r, late in sorted(slow))
+        try:
+            if self.net_overlay is None:
+                if not text:
+                    return
+                self.net_overlay = MacroOverlay()
+            used = (int(self.cfg.get("macro_overlay", True) and self.cfg.get("overlay_pos", "tl") == "bc") +
+                    int(self.cfg.get("battery_overlay", True) and self.cfg.get("battery_pos", "tr") == "bc"))
+            self.net_overlay.show(text, "warn", "bc", 36 * used)        # 같은 자리 표시와 겹치지 않게
+        except Exception as e:
+            print(f"[연결 표시] 오류: {e}")
 
     def update_battery_overlay(self):
         """메인 PC 화면 위에 기기 배터리 표시 (설정에서 켜고 위치를 고름)"""
@@ -1430,6 +1644,10 @@ class Server:
 
     def _handle(self, sock, addr):
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        try:     # 보내기 버퍼를 작게: 와이파이가 밀릴 때 오래된 이동이 쌓여 커서가 늦게 따라오는 것 방지
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 32 * 1024)
+        except OSError:
+            pass
         try:
             sock.ioctl(socket.SIO_KEEPALIVE_VALS, (1, 3000, 1000))   # 3초 조용하면 1초 간격으로 생존 확인
         except (AttributeError, OSError):
@@ -1479,6 +1697,9 @@ class Server:
                 elif t == "pong":
                     try:
                         client.rtt = max(0.0, (time.perf_counter() - float(msg["ts"])) * 1000)
+                        client.rtt_hist.append(client.rtt)
+                        client.last_pong = time.time()
+                        self.check_net(client)
                     except (KeyError, ValueError):
                         pass
                     if "bat" in msg:
@@ -1520,6 +1741,8 @@ class Server:
             else:
                 gone = False
         if gone:
+            if client.slow:
+                self.update_net_overlay()            # 끊긴 기기의 '느림' 표시 지우기
             self.macro.device_gone(client.name)     # 그 기기 매크로는 그 기기에만 남음
             threading.Thread(target=self.update_battery_overlay, daemon=True).start()
 
@@ -1856,13 +2079,16 @@ class Server:
         rk, pk = self.macro.keys()
         sk = self.macro.switch_key()
         dk = self.macro.devkey_lookup(hk_id)
+        mk = self.macro.mkey_lookup(hk_id)
         if not self.macro.keys_on:                       # 꺼져 있으면 매크로 키도 평소 키로
             rk = pk = sk = None
-            dk = None
-        if hk_id in (rk, pk, sk) or dk:
+            dk = mk = None
+        if hk_id in (rk, pk, sk) or dk or mk:
             if down and hk_id not in self.macro_keys_down:
                 self.macro_keys_down.add(hk_id)
-                if dk:
+                if mk:
+                    threading.Thread(target=self.macro.run_mkey, args=mk, daemon=True).start()
+                elif dk:
                     threading.Thread(target=self.macro.run_devkey, args=dk, daemon=True).start()
                 else:
                     fn = self.macro.toggle_record if hk_id == rk else self.macro.toggle_play if hk_id == pk else self.macro.switch
@@ -1922,6 +2148,8 @@ class Server:
                 targets = list(self.clients.values())
             for c in targets:
                 c.send({"t": "ping", "ts": time.perf_counter()})
+                if time.time() - c.last_pong > 5:      # 5초 넘게 응답이 없으면 연결이 아주 나쁜 것
+                    self.check_net(c)
 
     def client_rtts(self):
         with self.lock:
@@ -2713,6 +2941,7 @@ class Api:
             devices.append({"name": n, "on": n in sizes, "w": w, "h": h, "version": versions.get(n, ""),
                             "hid": bool(_c and getattr(_c, "hid_on", False)),
                             "rtt": None if rtts.get(n) is None else round(rtts[n]),
+                            "slow": bool(_c and getattr(_c, "slow", False)),
                             "bat": (getattr(_c, "battery", None) or (None, False))[0] if _c else None,
                             "chg": (getattr(_c, "battery", None) or (None, False))[1] if _c else False,
                             "rect": r if r and "w" in r else None})
@@ -2739,6 +2968,7 @@ class Api:
                 "macro_overlay": s.cfg.get("macro_overlay", True),
                 "overlay_pos": s.cfg.get("overlay_pos", "tl"),
                 "battery_overlay": s.cfg.get("battery_overlay", True),
+                "net_warn": s.cfg.get("net_warn", True),
                 "battery_pos": s.cfg.get("battery_pos", "tr"),
                 "battery_everywhere": s.cfg.get("battery_everywhere", True),
                 "server_name": s.display_name(),
@@ -2803,6 +3033,10 @@ class Api:
                 self._s.cfg["battery_everywhere"] = bool(value)
                 self._s.save()
                 self._s.update_battery_overlay()
+            elif key == "net_warn":
+                self._s.cfg["net_warn"] = bool(value)
+                self._s.save()
+                self._s.update_net_overlay()
             elif key == "battery_overlay":
                 self._s.cfg["battery_overlay"] = bool(value)
                 self._s.save()
@@ -3032,6 +3266,10 @@ class Api:
 
     def macro_load(self, name):
         return self._s.macro.load(self._mdev(), name)
+
+    def macro_op(self, op, args=None):
+        """새 매크로 기능 (매크로별 설정·즐겨찾기·바로 실행 키) — 기기 앱과 같은 명령"""
+        return self._s.macro.command(self._mdev(), op, dict(args or {}))
 
     def macro_delete(self, name):
         return self._s.macro.delete(self._mdev(), name)

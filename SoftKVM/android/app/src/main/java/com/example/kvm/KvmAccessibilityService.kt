@@ -170,7 +170,9 @@ class KvmAccessibilityService : AccessibilityService() {
         if (m == null || !m.optBoolean("overlay", true)) return "" to "idle"
         val dev = m.optString("dev")
         val name = if (m.isNull("name")) (if (m.optInt("count") > 0) "새 녹화" else "") else m.optString("name")
-        val slot = if (m.isNull("cur_slot")) "" else m.optString("cur_slot")
+        // 바로 실행 키가 있으면 그 키를, 없으면 A/B
+        val slot = if (!m.isNull("cur_key_name") && m.optString("cur_key_name").isNotEmpty()) m.optString("cur_key_name")
+                   else if (m.isNull("cur_slot")) "" else m.optString("cur_slot")
         if (m.optBoolean("recording") && m.optString("rec_dev") == dev) return "●  매크로 녹화 중" to "rec"
         if (m.optBoolean("playing") && m.optString("play_dev") == dev) {
             val rnd = if (m.optInt("repeat", 1) != 1) " (${m.optInt("round")}번째)" else ""

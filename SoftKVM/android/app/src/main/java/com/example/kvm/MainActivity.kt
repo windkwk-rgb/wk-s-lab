@@ -74,7 +74,16 @@ class MainActivity : Activity() {
     private lateinit var mcRecKey: TextView
     private lateinit var mcPlayKey: TextView
     private lateinit var mcRepeat: TextView
-    private lateinit var mcName: EditText
+    private lateinit var mcSet: LinearLayout
+    private lateinit var mcSpeedRow: LinearLayout
+    private lateinit var mcKeyChip: TextView
+    private lateinit var mcJust: LinearLayout
+    private lateinit var mcJustName: TextView
+    private lateinit var mcJustInput: EditText
+    private var mcJustShown = ""
+    private lateinit var mcSearch: EditText
+    private lateinit var mcSortRow: LinearLayout
+    private var mcSort = "used"
     private lateinit var mcList: LinearLayout
     private var mcListKey = ""
     private lateinit var mcOff: TextView
@@ -801,55 +810,112 @@ class MainActivity : Activity() {
             addView(mcRec, LinearLayout.LayoutParams(0, px(48), 1f).apply { marginEnd = px(5) })
             addView(mcPlay, LinearLayout.LayoutParams(0, px(48), 1f).apply { marginStart = px(5) })
         })
-        // 녹화 키 · 실행 키 · 전환 키 · 반복을 한 줄 타일로
+        // 지금 매크로의 반복 · 속도 · 바로 실행 키 (매크로마다 따로 기억)
+        mcRepeat = text("1", 15f, C.TEXT, bold = true).apply { gravity = Gravity.CENTER; minWidth = px(30) }
+        fun curName(): String? = KvmAccessibilityService.macroState?.let { if (it.isNull("name")) null else it.optString("name") }
+        fun setRepeat(d: Int) {
+            val n = curName() ?: return
+            val v = ((mcRepeat.text.toString().toIntOrNull() ?: 1) + d).coerceIn(0, 9999)
+            mcRepeat.text = v.toString()
+            mc("settings", JSONObject().put("name", n).put("repeat", v))
+        }
+        fun mini(sym: String, d: Int) = text(sym, 17f, C.SUB, bold = true).apply {
+            gravity = Gravity.CENTER; isClickable = true; setOnClickListener { setRepeat(d) }
+        }
+        mcSpeedRow = LinearLayout(this).apply { background = round(C.FIELD, 9); setPadding(px(2), px(2), px(2), px(2)) }
+        for (v in listOf(0.5, 1.0, 1.5, 2.0)) {
+            mcSpeedRow.addView(text("${if (v % 1.0 == 0.0) v.toInt() else v}배", 13f, C.SUB, bold = true).apply {
+                tag = v; gravity = Gravity.CENTER; setPadding(px(9), px(6), px(9), px(6)); isClickable = true
+                setOnClickListener { curName()?.let { n -> mc("settings", JSONObject().put("name", n).put("speed", v)) } }
+            })
+        }
+        mcKeyChip = chip("+ 정하기") { curName()?.let { n -> mc("mkey", JSONObject().put("name", n)); toast("'$n'에 붙일 키를 메인 PC 키보드에서 누르세요") } }
+        mcSet = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, 0, 0, px(12))
+            addView(LinearLayout(this@MainActivity).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                addView(text("반복", 13f, C.SUB).apply { setPadding(0, 0, px(8), 0) })
+                addView(LinearLayout(this@MainActivity).apply {
+                    gravity = Gravity.CENTER_VERTICAL; background = round(C.FIELD, 9)
+                    addView(mini("−", -1), LinearLayout.LayoutParams(px(32), px(32)))
+                    addView(mcRepeat)
+                    addView(mini("+", 1), LinearLayout.LayoutParams(px(32), px(32)))
+                })
+                addView(text("0 = 계속", 11f, 0xFF5D6370.toInt()).apply { setPadding(px(6), 0, px(14), 0) })
+                addView(text("속도", 13f, C.SUB).apply { setPadding(0, 0, px(8), 0) })
+                addView(mcSpeedRow)
+            })
+            addView(LinearLayout(this@MainActivity).apply {
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, px(8), 0, 0)
+                addView(text("바로 실행 키", 13f, C.SUB).apply { setPadding(0, 0, px(8), 0) })
+                addView(mcKeyChip)
+                addView(text("  누르면 이 매크로를 바로 실행 · 다시 누르면 멈춤", 11.5f, 0xFF5D6370.toInt()))
+            })
+        }
+        mcCard.addView(mcSet, 1)        // 제목 바로 아래
+        // 녹화 키 · 실행 키 · 전환 키
         val (tr, rk) = keyTile("녹화 키", "rec"); tileRec = tr; mcRecKey = rk
         val (tp, pk) = keyTile("실행 키", "play"); tilePlay = tp; mcPlayKey = pk
         val (ts, sk) = keyTile("전환 키", "switch"); tileSw = ts; mcSwKey = sk
-        mcRepeat = text("1", 15f, C.TEXT, bold = true).apply { gravity = Gravity.CENTER; minWidth = px(28) }
-        fun setRepeat(d: Int) {
-            val v = ((mcRepeat.text.toString().toIntOrNull() ?: 1) + d).coerceIn(0, 9999)
-            mcRepeat.text = v.toString()
-            mc("repeat", JSONObject().put("value", v))
-        }
-        fun mini(s: String, d: Int) = text(s, 17f, C.SUB, bold = true).apply {
-            gravity = Gravity.CENTER; isClickable = true; setOnClickListener { setRepeat(d) }
-        }
-        val tileRep = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-            setPadding(px(4), px(10), px(4), px(10))
-            background = round(C.FIELD, 12)
-            addView(text("반복", 12f, C.SUB).apply { gravity = Gravity.CENTER })
-            addView(LinearLayout(this@MainActivity).apply {
-                gravity = Gravity.CENTER
-                addView(mini("−", -1), LinearLayout.LayoutParams(px(26), px(24)))
-                addView(mcRepeat)
-                addView(mini("+", 1), LinearLayout.LayoutParams(px(26), px(24)))
-            })
-            addView(text("0 = 계속", 11f, 0xFF5D6370.toInt()).apply { gravity = Gravity.CENTER })
-        }
         mcCard.addView(LinearLayout(this).apply {
             setPadding(0, px(12), 0, 0)
-            listOf(tileRec, tilePlay, tileSw, tileRep).forEachIndexed { i, t ->
+            listOf(tileRec, tilePlay, tileSw).forEachIndexed { i, t ->
                 addView(t, LinearLayout.LayoutParams(0, -2, 1f).apply { if (i > 0) marginStart = px(8) })
             }
         })
         mcHint = text("", 12f, C.SUB).apply { setPadding(0, px(8), 0, px(10)) }
         mcCard.addView(mcHint)
         mcCard.addView(divider())
-        mcName = field("", "지금 녹화를 이름 붙여 저장", InputType.TYPE_CLASS_TEXT)
+        // 방금 녹화해서 자동 저장한 것 → 이름 바꾸기 칸
+        mcJustName = text("", 13f, C.SUB)
+        mcJustInput = field("", "예: 던전 입장", InputType.TYPE_CLASS_TEXT)
+        fun hideKb() = (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(mcJustInput.windowToken, 0)
+        mcJust = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; visibility = View.GONE
+            setPadding(px(12), px(10), px(12), px(10))
+            background = round(0x1722C55E, 12, 0x4022C55E)
+            addView(mcJustName)
+            addView(LinearLayout(this@MainActivity).apply {
+                gravity = Gravity.CENTER_VERTICAL; setPadding(0, px(8), 0, 0)
+                addView(mcJustInput, LinearLayout.LayoutParams(0, -2, 1f))
+                addView(button("확인") {
+                    val o = KvmAccessibilityService.macroState?.optString("just_saved") ?: ""
+                    val n = mcJustInput.text.toString().trim()
+                    if (o.isEmpty() || o == "null") return@button
+                    if (n.isEmpty()) mc("seen") else mc("rename", JSONObject().put("name", o).put("new", n))
+                    hideKb(); mcJust.visibility = View.GONE
+                }, LinearLayout.LayoutParams(px(70), px(46)).apply { marginStart = px(8) })
+                addView(chip("이대로") { mc("seen"); hideKb(); mcJust.visibility = View.GONE },
+                    LinearLayout.LayoutParams(-2, -2).apply { marginStart = px(6) })
+            })
+        }
+        mcCard.addView(mcJust, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(12) })
+        // 검색 · 정렬
+        mcSearch = field("", "매크로 이름·폴더 검색", InputType.TYPE_CLASS_TEXT).apply {
+            addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) {}
+                override fun onTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) {}
+                override fun afterTextChanged(e: android.text.Editable?) { mcListKey = ""; refreshMacro() }
+            })
+        }
+        mcSort = getSharedPreferences("ui", MODE_PRIVATE).getString("msort", "used") ?: "used"
+        mcSortRow = LinearLayout(this).apply { background = round(C.FIELD, 9); setPadding(px(2), px(2), px(2), px(2)) }
+        for ((v, label) in listOf("used" to "최근", "name" to "이름", "saved" to "녹화순")) {
+            mcSortRow.addView(text(label, 13f, C.SUB, bold = true).apply {
+                tag = v; gravity = Gravity.CENTER; setPadding(px(10), px(7), px(10), px(7)); isClickable = true
+                setOnClickListener {
+                    mcSort = v; getSharedPreferences("ui", MODE_PRIVATE).edit().putString("msort", v).apply()
+                    mcListKey = ""; refreshMacro()
+                }
+            })
+        }
         mcCard.addView(LinearLayout(this).apply {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, px(12), 0, px(4))
-            addView(mcName, LinearLayout.LayoutParams(0, -2, 1f))
-            addView(button("저장") {
-                val st = KvmAccessibilityService.macroState
-                val n = mcName.text.toString().trim().ifEmpty { st?.optString("name", "")?.takeIf { it != "null" } ?: "" }
-                if (n.isEmpty()) return@button toast("이름을 입력하세요")
-                mc("save", JSONObject().put("name", n))
-                mcName.setText("")
-                (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(mcName.windowToken, 0)
-                toast("'$n' 저장했어요")
-            }, LinearLayout.LayoutParams(px(76), px(46)).apply { marginStart = px(8) })
+            addView(mcSearch, LinearLayout.LayoutParams(0, -2, 1f))
+            addView(mcSortRow, LinearLayout.LayoutParams(-2, -2).apply { marginStart = px(8) })
         })
         mcList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         mcCard.addView(mcList)
@@ -892,10 +958,36 @@ class MainActivity : Activity() {
             }
         }
         mcHint.text = if (cap.isNotEmpty()) "메인 PC 키보드에서 원하는 키를 누르세요 · Esc 취소"
-            else "A·B를 정해 두면 $sw 키로 둘을 번갈아 바꿔요 (안 정하면 저장한 순서대로)"
-        mcRepeat.text = st.optInt("repeat", 1).toString()
+            else "녹화하면 바로 저장돼요 · 목록에서 누르면 바로 선택 · 매크로마다 바로 실행 키를 붙일 수 있어요"
         val lib = st.optJSONArray("library") ?: org.json.JSONArray()
-        val key = lib.toString() + name
+        val capName = if (st.isNull("capture_name")) "" else st.optString("capture_name")
+        // 지금 매크로 설정 줄
+        var cur: JSONObject? = null
+        for (i in 0 until lib.length()) if (lib.getJSONObject(i).optString("name") == name) cur = lib.getJSONObject(i)
+        mcSet.visibility = if (cur != null) View.VISIBLE else View.GONE
+        if (cur != null) {
+            mcRepeat.text = cur.optInt("repeat", 1).toString()
+            val sp = cur.optDouble("speed", 1.0)
+            for (i in 0 until mcSpeedRow.childCount) (mcSpeedRow.getChildAt(i) as TextView).apply {
+                val on = (tag as Double) == sp
+                setTextColor(if (on) C.TEXT else C.SUB); background = if (on) round(0xFF2F3542.toInt(), 7) else null
+            }
+            styleKeyChip(mcKeyChip, cur, cap == "mkey" && capName == name, "+ 정하기")
+        }
+        // 방금 저장
+        val just = if (st.isNull("just_saved")) "" else st.optString("just_saved")
+        if (just.isEmpty()) { mcJust.visibility = View.GONE; mcJustShown = "" }
+        else if (just != mcJustShown) {
+            mcJustShown = just; mcJust.visibility = View.VISIBLE
+            mcJustName.text = "방금 녹화한 걸 '$just'(으)로 저장했어요 · 이름을 바꿔 둘까요?"
+            mcJustInput.setText("")
+        }
+        for (i in 0 until mcSortRow.childCount) (mcSortRow.getChildAt(i) as TextView).apply {
+            val on = tag == mcSort
+            setTextColor(if (on) C.TEXT else C.SUB); background = if (on) round(0xFF2F3542.toInt(), 7) else null
+        }
+        val q = mcSearch.text.toString().trim().lowercase()
+        val key = lib.toString() + name + cap + capName + q + mcSort + closedFolders
         if (key == mcListKey) return
         mcListKey = key
         mcList.removeAllViews()
@@ -915,49 +1007,93 @@ class MainActivity : Activity() {
                 }
             })
         })
-        // 폴더별로 묶기 (폴더 이름 누르면 접기/펴기)
-        val groups = LinkedHashMap<String, MutableList<JSONObject>>()
-        for (i in 0 until lib.length()) {
-            val x = lib.getJSONObject(i)
-            groups.getOrPut(x.optString("folder", "")) { ArrayList() }.add(x)
+        val all = (0 until lib.length()).map { lib.getJSONObject(it) }.sortedWith(when (mcSort) {
+            "name" -> compareBy<JSONObject> { it.optString("name") }
+            "saved" -> compareByDescending<JSONObject> { it.optString("saved") }
+            else -> compareByDescending<JSONObject> { it.optString("used") }
+        })
+        val folderNames = all.map { it.optString("folder", "") }.filter { it.isNotEmpty() }.distinct()
+        fun row(x: JSONObject) {
+            val n = x.optString("name")
+            val slot = if (x.isNull("slot")) "" else x.optString("slot")
+            val rp = x.optInt("repeat", 1); val sp = x.optDouble("speed", 1.0)
+            val extra = (if (rp != 1) " · ${if (rp == 0) "계속 반복" else "${rp}번"}" else "") + (if (sp != 1.0) " · ${sp}배" else "")
+            val used = x.optString("used").let { if (it.length >= 16) it.substring(5, 16) else it }
+            val sub = text("동작 ${x.optInt("count")}개 · ${x.optDouble("dur")}초$extra · $used", 12f, C.SUB)
+            fun ab(s2: String) = text(s2, 13f, if (slot == s2) Color.WHITE else C.SUB, bold = true).apply {
+                gravity = Gravity.CENTER
+                background = round(if (slot == s2) C.BLUE else C.FIELD, 8)
+                isClickable = true
+                setOnClickListener { mc("slot", JSONObject().put("name", n).put("slot", s2)) }
+                minWidth = px(32); minHeight = px(32)
+            }
+            val fav = x.optBoolean("fav")
+            val star = text(if (fav) "★" else "☆", 18f, if (fav) 0xFFF5B84A.toInt() else 0xFF5D6370.toInt()).apply {
+                gravity = Gravity.CENTER; minWidth = px(30); minHeight = px(32); isClickable = true
+                setOnClickListener { mc("fav", JSONObject().put("name", n)) }
+            }
+            val kc = chip("+ 키") { mc("mkey", JSONObject().put("name", n)); toast("'$n'에 붙일 키를 메인 PC 키보드에서 누르세요") }.apply {
+                setOnLongClickListener {
+                    if (!x.isNull("key")) confirm("'$n'의 바로 실행 키를 지울까요?", "지우기") { mc("mkey_clear", JSONObject().put("name", n)) }
+                    true
+                }
+            }
+            styleKeyChip(kc, x, cap == "mkey" && capName == n, "+ 키")
+            val del = chip("✕") { confirm("'$n'을(를) 삭제할까요?", "삭제") { mc("delete", JSONObject().put("name", n)) } }.apply { setTextColor(0xFFFF8A8A.toInt()) }
+            val ren = chip("✎") { renameMacro(n) }
+            val fold = chip("📁") { pickFolder(n, x.optString("folder", ""), folderNames) }
+            mcList.addView(divider())
+            val r = macroRow(n, sub, kc, ab("A"), ab("B"), fold, ren, del).apply {
+                addView(star, 0, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = px(4) })
+                isClickable = true
+                setOnClickListener { if (n != name) mc("load", JSONObject().put("name", n)) }   // 누르면 바로 선택
+                if (n == name) background = round(0x142563EB, 10)
+            }
+            if (n == name) (r.getChildAt(1) as LinearLayout).getChildAt(0).let { (it as TextView).setTextColor(0xFF9DBBFF.toInt()) }
+            mcList.addView(r)
         }
-        val folders = groups.keys.sortedWith(compareBy<String>({ it.isEmpty() }, { it }))
-        for (f in folders) {
-          if (!(f.isEmpty() && folders.size == 1)) {
-            val closed = f in closedFolders
+        fun header(key2: String, title: String, count: Int, color: Int) {
+            val closed = key2 in closedFolders
             mcList.addView(divider())
             mcList.addView(LinearLayout(this).apply {
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(0, px(10), 0, px(10))
                 isClickable = true
-                setOnClickListener { if (!closedFolders.add(f)) closedFolders.remove(f); mcListKey = ""; refreshMacro() }
+                setOnClickListener { if (!closedFolders.add(key2)) closedFolders.remove(key2); mcListKey = ""; refreshMacro() }
                 addView(text(if (closed) "▸" else "▾", 15f, C.SUB).apply { setPadding(0, 0, px(8), 0) })
-                addView(text("📁  ${f.ifEmpty { "폴더 없음" }}", 15f, C.TEXT, bold = true))
-                addView(text("  ${groups[f]!!.size}개", 13f, C.SUB), LinearLayout.LayoutParams(0, -2, 1f))
+                addView(text(title, 15f, color, bold = true))
+                addView(text("  ${count}개", 13f, C.SUB), LinearLayout.LayoutParams(0, -2, 1f))
             })
-            if (closed) continue
-          }
-          for (x in groups[f]!!) {
-            val n = x.optString("name")
-            val slot = if (x.isNull("slot")) "" else x.optString("slot")
-            val sub = text("동작 ${x.optInt("count")}개 · ${x.optDouble("dur")}초 · ${x.optString("saved")}", 12f, C.SUB)
-            fun ab(s: String) = text(s, 13f, if (slot == s) Color.WHITE else C.SUB, bold = true).apply {
-                gravity = Gravity.CENTER
-                background = round(if (slot == s) C.BLUE else C.FIELD, 8)
-                isClickable = true
-                setOnClickListener { mc("slot", JSONObject().put("name", n).put("slot", s)) }
-                minWidth = px(32); minHeight = px(32)
-            }
-            val use: View = if (n == name) text("사용 중", 12f, C.GREEN, bold = true).apply {
-                setPadding(px(10), px(6), px(10), px(6)); background = round(0x1F22C55E, 8)
-            } else chip("불러오기") { mc("load", JSONObject().put("name", n)) }
-            val del = chip("✕") { confirm("'$n'을(를) 삭제할까요?", "삭제") { mc("delete", JSONObject().put("name", n)) } }.apply { setTextColor(0xFFFF8A8A.toInt()) }
-            mcList.addView(divider())
-            val ren = chip("✎") { renameMacro(n) }
-            val fold = chip("📁") { pickFolder(n, x.optString("folder", ""), groups.keys.filter { it.isNotEmpty() }) }
-            mcList.addView(macroRow(n, sub, ab("A"), ab("B"), use, fold, ren, del))
-          }
         }
+        if (q.isNotEmpty()) {
+            val hit = all.filter { it.optString("name").lowercase().contains(q) || it.optString("folder", "").lowercase().contains(q) }
+            if (hit.isEmpty()) mcList.addView(text("찾는 매크로가 없어요", 13f, C.SUB).apply { setPadding(0, px(12), 0, 0) })
+            hit.forEach { row(it) }
+            return
+        }
+        val favs = all.filter { it.optBoolean("fav") }
+        if (favs.isNotEmpty()) {
+            header("\u2605fav", "★  즐겨찾기", favs.size, 0xFFF5B84A.toInt())
+            if ("\u2605fav" !in closedFolders) favs.forEach { row(it) }
+        }
+        // 폴더별로 묶기 (폴더 이름 누르면 접기/펴기)
+        val groups = LinkedHashMap<String, MutableList<JSONObject>>()
+        for (x in all) if (!x.optBoolean("fav")) groups.getOrPut(x.optString("folder", "")) { ArrayList() }.add(x)
+        val folders = groups.keys.sortedWith(compareBy<String>({ it.isEmpty() }, { it }))
+        for (f in folders) {
+            if (!(f.isEmpty() && folders.size == 1 && favs.isEmpty())) {
+                header(f, "📁  ${f.ifEmpty { "폴더 없음" }}", groups[f]!!.size, C.TEXT)
+                if (f in closedFolders) continue
+            }
+            groups[f]!!.forEach { row(it) }
+        }
+    }
+
+    private fun styleKeyChip(v: TextView, x: JSONObject, waiting: Boolean, empty: String) {
+        val has = !x.isNull("key") && x.optString("key_name").isNotEmpty() && x.optString("key_name") != "null"
+        v.text = when { waiting -> "키를 누르세요…"; has -> x.optString("key_name"); else -> empty }
+        v.setTextColor(when { waiting -> Color.WHITE; has -> 0xFFA9C3FF.toInt(); else -> 0xFF5D6370.toInt() })
+        v.background = when { waiting -> round(C.BLUE, 9); has -> round(0x292563EB, 9, 0x5A5B8CFF); else -> round(C.FIELD, 9) }
     }
 
     /** 메인 PC와 이 기기의 위치를 그린 작은 지도. 조작 중이면 이 기기가 빛남 */
