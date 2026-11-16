@@ -32,6 +32,8 @@ internal sealed partial class AdbHelper : IDisposable
     private readonly object _runLock = new();
     private volatile bool _stopped;
     private bool _downloadTried;
+    private bool _serverStarted;
+    private DateTime _lastVerify;
 
     public volatile string Status = "확인 중…";
     public volatile bool UsbReady;
@@ -89,8 +91,9 @@ internal sealed partial class AdbHelper : IDisposable
             return;
         }
 
+        EnsureServer();
         var (ok, output) = Run("devices -l");
-        if (!ok) { Status = "adb 실행 실패"; UsbReady = false; return; }
+        if (!ok) { Status = "adb 실행 실패"; UsbReady = false; _serverStarted = false; return; }
 
         // "serial  state  ... model:Tablet_Model ..."
         var raw = new List<(string serial, string state, string model)>();
@@ -152,6 +155,21 @@ internal sealed partial class AdbHelper : IDisposable
             }
         }
 
+        // 연결 규칙이 사라졌는지 확인 (다른 프로그램이 adb를 다시 시작하거나, 케이블을 잠깐 뺐다 꽂으면 사라짐)
+        if (_settings.UsbAuto && DateTime.UtcNow - _lastVerify > TimeSpan.FromSeconds(5))
+        {
+            _lastVerify = DateTime.UtcNow;
+            string[] done;
+            lock (_reversed) done = _reversed.ToArray();
+            foreach (var serial in done)
+            {
+                var (vok, list) = Run($"-s {serial} reverse --list", 4000);
+                if (!vok || list.Contains($"tcp:{Proto.Port}")) continue;
+                var (rok, _) = Run($"-s {serial} reverse tcp:{Proto.Port} tcp:{Proto.Port}");
+                if (!rok) lock (_reversed) _reversed.Remove(serial);
+            }
+        }
+
         int count;
         lock (_reversed) count = _reversed.Count;
         UsbReady = count > 0 && _settings.UsbAuto;
@@ -197,6 +215,28 @@ internal sealed partial class AdbHelper : IDisposable
         Devices = Devices.Select(d => d.Serial == serial ? d with { Busy = text } : d).ToList();
     }
 
+    /// <summary>
+    /// adb 서버를 출력 연결 없이 따로 띄움. 출력을 읽는 중에 서버가 처음 켜지면
+    /// 서버가 그 연결을 계속 붙잡아서 PenBridge가 멈춘 것처럼 기다리는 일이 있음 → 미리 켜 둠.
+    /// 서버가 끝나면 그동안 만든 연결 규칙도 사라지므로 다시 만들도록 기록을 비움.
+    /// </summary>
+    private void EnsureServer()
+    {
+        if (_serverStarted) return;
+        lock (_runLock)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo(AdbPath!, "start-server") { UseShellExecute = false, CreateNoWindow = true };
+                using var p = Process.Start(psi);
+                p?.WaitForExit(15000);
+            }
+            catch { return; }
+        }
+        _serverStarted = true;
+        lock (_reversed) _reversed.Clear();
+    }
+
     private (bool ok, string output) Run(string args, int timeoutMs = 8000)
     {
         lock (_runLock)   // 설치(몇십 초)와 주기 점검이 동시에 adb를 부르지 않게
@@ -213,7 +253,8 @@ internal sealed partial class AdbHelper : IDisposable
             var outTask = p.StandardOutput.ReadToEndAsync();
             var errTask = p.StandardError.ReadToEndAsync();
             if (!p.WaitForExit(timeoutMs)) { try { p.Kill(); } catch { } return (false, "시간 초과"); }
-            p.WaitForExit();
+            // 출력이 끝까지 닫히지 않아도 무한정 기다리지 않음
+            if (!Task.WaitAll(new Task[] { outTask, errTask }, 3000)) return (p.ExitCode == 0, "");
             return (p.ExitCode == 0, outTask.Result + errTask.Result);
         }
     }

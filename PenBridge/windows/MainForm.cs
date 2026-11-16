@@ -72,12 +72,10 @@ internal sealed class MainForm : Form
         SystemEvents.DisplaySettingsChanged += OnDisplayChanged;
         SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
-        try { _server.Start(); }
-        catch (Exception e)
-        {
-            MessageBox.Show($"포트 {Proto.Port}을(를) 열 수 없어요. 다른 프로그램이 쓰고 있는지 확인해 주세요.\n\n{e.Message}",
-                "PenBridge", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        _server.StartFailed += err => Post(() =>
+            MessageBox.Show(this, $"포트 {Proto.Port}을(를) 열 수 없어요. 다른 프로그램이 쓰고 있는지 확인해 주세요.\n\n{err}",
+                "PenBridge", MessageBoxButtons.OK, MessageBoxIcon.Error));
+        _server.Start();
         try { _discovery.Start(); } catch { /* 자동 검색만 안 될 뿐 */ }
         _adb.Start();
 

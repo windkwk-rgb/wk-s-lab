@@ -17,6 +17,11 @@ internal sealed class PenInjector : IDisposable
 
     public int ErrorCount { get; private set; }
     public int LastError { get; private set; }
+    /// <summary>펜 장치를 다시 만든 횟수 (Windows가 계속 거부할 때)</summary>
+    public int Recreated { get; private set; }
+
+    private int _failStreak;
+    private bool _recovering;
 
     public PenInjector()
     {
@@ -42,7 +47,7 @@ internal sealed class PenInjector : IDisposable
         // 범위 밖에서 곧바로 접촉하면 Windows가 거부하는 경우가 있어 먼저 호버 프레임을 보낸다.
         if (!_inRange)
         {
-            Send(x, y, PointerFlags.InRange | PointerFlags.Update, ButtonChange.None, s, 0);
+            if (!Send(x, y, PointerFlags.InRange | PointerFlags.Update, ButtonChange.None, s, 0)) return;   // 다음 샘플에서 다시
             _inRange = true;
         }
 
@@ -75,8 +80,7 @@ internal sealed class PenInjector : IDisposable
             pressure = (uint)Math.Clamp(Math.Round(p * 1024), 1, 1024);
         }
 
-        Send(x, y, flags, change, s, pressure);
-        _inContact = wantContact;
+        if (Send(x, y, flags, change, s, pressure)) _inContact = wantContact;   // 실패하면 Recover가 상태를 정리함
     }
 
     /// <summary>펜을 떼고 범위 밖으로 보낸다(연결 끊김, 앱 전환 등).</summary>
@@ -90,9 +94,9 @@ internal sealed class PenInjector : IDisposable
         _inRange = false;
     }
 
-    private void Send(int x, int y, PointerFlags flags, ButtonChange change, in PenSample s, uint pressure)
+    private bool Send(int x, int y, PointerFlags flags, ButtonChange change, in PenSample s, uint pressure)
     {
-        if (_device == IntPtr.Zero) return;
+        if (_device == IntPtr.Zero) return false;
 
         var penFlags = PenFlags.None;
         if ((s.Buttons & Proto.BtnBarrel) != 0) penFlags |= PenFlags.Barrel;
@@ -112,16 +116,65 @@ internal sealed class PenInjector : IDisposable
         info.penInfo.tiltX = Math.Clamp((int)Math.Round(s.TiltX), -90, 90);
         info.penInfo.tiltY = Math.Clamp((int)Math.Round(s.TiltY), -90, 90);
 
-        if (!InjectSyntheticPointerInput(_device, _buf, 1))
-        {
-            ErrorCount++;
-            LastError = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-            // 상태가 꼬였을 수 있으니 처음부터 다시 시작
-            _inContact = false;
-            _inRange = false;
-        }
         _lastX = x;
         _lastY = y;
+        if (InjectSyntheticPointerInput(_device, _buf, 1))
+        {
+            _failStreak = 0;
+            return true;
+        }
+        ErrorCount++;
+        LastError = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+        _failStreak++;
+        Recover(x, y);
+        return false;
+    }
+
+    /// <summary>
+    /// Windows가 입력을 거부했을 때. Windows는 아직 펜이 "닿아 있다"고 알고 있을 수 있어서,
+    /// 상태만 지우면 이후 입력이 계속 거부되어 펜이 사라진 것처럼 보인다.
+    /// → 떼기 → 범위 밖 순서로 Windows 쪽 상태를 정리하고, 계속 실패하면 펜 장치를 새로 만든다.
+    /// </summary>
+    private void Recover(int x, int y)
+    {
+        _inContact = false;
+        _inRange = false;
+        if (_recovering) return;
+        _recovering = true;
+        try
+        {
+            Raw(x, y, PointerFlags.InRange | PointerFlags.Up, ButtonChange.FirstUp);   // 실패해도 괜찮음
+            Raw(x, y, PointerFlags.Update, ButtonChange.None);
+            if (_failStreak >= 6)
+            {
+                var fresh = CreateSyntheticPointerDevice(PT_PEN, 1, POINTER_FEEDBACK_DEFAULT);
+                if (fresh != IntPtr.Zero)
+                {
+                    if (_device != IntPtr.Zero) DestroySyntheticPointerDevice(_device);
+                    _device = fresh;
+                    Recreated++;
+                }
+                _failStreak = 0;
+            }
+        }
+        finally
+        {
+            _recovering = false;
+        }
+    }
+
+    /// <summary>오류 처리 없이 한 프레임 보내기 (복구용)</summary>
+    private void Raw(int x, int y, PointerFlags flags, ButtonChange change)
+    {
+        if (_device == IntPtr.Zero) return;
+        ref var info = ref _buf[0];
+        info = default;
+        info.type = PT_PEN;
+        info.penInfo.pointerInfo.pointerType = PT_PEN;
+        info.penInfo.pointerInfo.pointerFlags = flags | PointerFlags.Primary | PointerFlags.Confidence;
+        info.penInfo.pointerInfo.ptPixelLocation = new POINT { X = x, Y = y };
+        info.penInfo.pointerInfo.buttonChangeType = change;
+        InjectSyntheticPointerInput(_device, _buf, 1);
     }
 
     public void Dispose()

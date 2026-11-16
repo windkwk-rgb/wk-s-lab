@@ -69,6 +69,16 @@ class PadActivity : AppCompatActivity(), PenConnection.Listener, StreamClient.Li
         pad.showCursor = prefs.showCursor
         pad.gesturesEnabled = prefs.gestures
         pad.mirrorMode = prefs.mirror
+        pad.setArea(prefs.areaScale, prefs.areaX, prefs.areaY)
+        pad.showAreaButton = !prefs.toolbarEnabled
+        // 영역 크기는 태블릿 안에서만 바뀜 (좌표는 항상 영역 기준 0~1) → 노트북 연결은 그대로
+        pad.onAreaChanged = { s, x, y -> prefs.areaScale = s; prefs.areaX = x; prefs.areaY = y }
+        pad.onPenCut = {
+            if (!prefs.areaHintShown) {
+                prefs.areaHintShown = true
+                Toast.makeText(this, "그리는 중에 손이 화면에 닿으면 태블릿이 펜 입력을 끊을 수 있어요. 툴바의 [그리기 영역] 버튼으로 영역을 줄이고 남는 곳에 손을 올려 보세요.", Toast.LENGTH_LONG).show()
+            }
+        }
         toolbar.value = ToolbarState(mirror = prefs.mirror, collapsed = prefs.toolbarCollapsed, right = prefs.toolbarRight)
 
         // [툴바][입력판] (왼손잡이 설정이면 [입력판][툴바]) — 툴바가 차지한 만큼 입력판이 줄어서 서로 겹치지 않음
@@ -86,6 +96,7 @@ class PadActivity : AppCompatActivity(), PenConnection.Listener, StreamClient.Li
                         onAction = ::onToolbarAction,
                         onMirror = ::toggleMirror,
                         onCollapse = ::toggleCollapse,
+                        onArea = { pad.startAreaEdit() },
                     )
                 }
             }
@@ -98,7 +109,9 @@ class PadActivity : AppCompatActivity(), PenConnection.Listener, StreamClient.Li
         setContentView(root)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = finish()
+            override fun handleOnBackPressed() {
+                if (pad.editingArea) pad.finishAreaEdit() else finish()
+            }
         })
     }
 

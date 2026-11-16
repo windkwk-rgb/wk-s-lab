@@ -71,6 +71,24 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("mirror", false)
         set(v) = sp.edit().putBoolean("mirror", v).apply()
 
+    /** 그리기 영역 크기 (1 = 화면 가득, 0.35 = 가장 작게). 남는 곳은 손을 올려 두는 자리 */
+    var areaScale: Float
+        get() = sp.getFloat("area_scale", 1f)
+        set(v) = sp.edit().putFloat("area_scale", v).apply()
+
+    /** 그리기 영역 위치 (0 = 왼쪽/위, 0.5 = 가운데, 1 = 오른쪽/아래) */
+    var areaX: Float
+        get() = sp.getFloat("area_x", 0.5f)
+        set(v) = sp.edit().putFloat("area_x", v).apply()
+    var areaY: Float
+        get() = sp.getFloat("area_y", 0.5f)
+        set(v) = sp.edit().putFloat("area_y", v).apply()
+
+    /** '손이 닿아 펜이 끊김' 안내를 이미 보여 줬는지 */
+    var areaHintShown: Boolean
+        get() = sp.getBoolean("area_hint_shown", false)
+        set(v) = sp.edit().putBoolean("area_hint_shown", v).apply()
+
     fun pinFor(host: String): Int = sp.getInt("pin_$host", -1)
     fun setPin(host: String, pin: Int) = sp.edit().putInt("pin_$host", pin).apply()
 

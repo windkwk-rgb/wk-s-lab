@@ -7,7 +7,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -19,6 +21,7 @@ import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.tan
 
@@ -27,6 +30,8 @@ import kotlin.math.tan
  * - 손바닥/손가락은 무시(설정 시 손가락도 입력)
  * - PC 화면 비율에 맞춘 "활성 영역"을 그려서 원이 찌그러지지 않게 함
  * - 필압, 기울기, 사이드 버튼, 지우개 끝 지원
+ * - 그리기 영역 크기·위치 조절: 좌표는 항상 "영역 기준 0~1"이라 노트북 쪽은 바뀌는 것이 없음.
+ *   영역 밖은 손을 올려 두는 자리 (펜·손가락 모두 무시)
  */
 @SuppressLint("ViewConstructor")
 class PenPadView(
@@ -55,6 +60,23 @@ class PenPadView(
     private val density = resources.displayMetrics.density
     private val active = RectF()
     private var aspect = 0f
+
+    // 그리기 영역 크기·위치
+    private val avail = RectF()      // 영역을 놓을 수 있는 범위
+    private var fullW = 0f           // 100%일 때 크기 (노트북 화면 비율)
+    private var fullH = 0f
+    var areaScale = 1f; private set
+    var areaX = 0.5f; private set
+    var areaY = 0.5f; private set
+    /** 영역 조절을 끝냈을 때 (크기, 가로 위치, 세로 위치) → 저장용 */
+    var onAreaChanged: ((Float, Float, Float) -> Unit)? = null
+    /** 그리는 중에 안드로이드가 펜 입력을 취소했을 때 (보통 손바닥이 닿아서) */
+    var onPenCut: (() -> Unit)? = null
+    /** 툴바를 끈 경우 입력판 위에 '영역' 버튼을 보여 줌 */
+    var showAreaButton = false
+    private val areaBtnRect = RectF()
+    private var penIgnored = false   // 영역 밖에서 시작한 펜 → 뗄 때까지 무시
+    private val edgeTol = 24 * density
 
     // 상태 표시
     private var statusText = "연결 중…"
@@ -138,12 +160,22 @@ class PenPadView(
         emitOut()
     }
 
+    /** 영역 크기(0.35~1)와 위치(0~1). 연결에는 영향 없음 */
+    fun setArea(scale: Float, x: Float, y: Float) {
+        areaScale = scale.coerceIn(MIN_AREA, 1f)
+        areaX = x.coerceIn(0f, 1f)
+        areaY = y.coerceIn(0f, 1f)
+        layoutActive()
+        invalidate()
+    }
+
     // ───────────── 레이아웃 ─────────────
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         layoutActive()
         val s = 44 * density
         closeRect.set(w - s - 12 * density, 12 * density, w - 12 * density, 12 * density + s)
+        areaBtnRect.set(closeRect.left - s - 10 * density, closeRect.top, closeRect.left - 10 * density, closeRect.bottom)
     }
 
     private fun layoutActive() {
@@ -152,19 +184,31 @@ class PenPadView(
         val availW = width - margin * 2
         val availH = height - top - margin
         if (availW <= 0 || availH <= 0) return
+        avail.set(margin, top, margin + availW, top + availH)
         if (aspect <= 0f) {
-            active.set(margin, top, margin + availW, top + availH)
+            fullW = availW; fullH = availH
         } else {
-            var w = availW
-            var h = w / aspect
-            if (h > availH) { h = availH; w = h * aspect }
-            val left = (width - w) / 2
-            val t = top + (availH - h) / 2
-            active.set(left, t, left + w, t + h)
+            fullW = availW
+            fullH = fullW / aspect
+            if (fullH > availH) { fullH = availH; fullW = fullH * aspect }
         }
+        val w = fullW * areaScale
+        val h = fullH * areaScale
+        val left = avail.left + (availW - w) * areaX
+        val t = avail.top + (availH - h) * areaY
+        active.set(left, t, left + w, t + h)
         clip.reset()
         clip.addRoundRect(active, 10 * density, 10 * density, Path.Direction.CW)
+        // 화면 가장자리를 쓸면 나오는 '뒤로 가기' 같은 시스템 동작이 그리는 선을 끊지 않게
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val r = Rect()
+            active.roundOut(r)
+            systemGestureExclusionRects = listOf(r)
+        }
     }
+
+    private fun farOutside(x: Float, y: Float): Boolean =
+        x < active.left - edgeTol || x > active.right + edgeTol || y < active.top - edgeTol || y > active.bottom + edgeTol
 
     // ───────────── 그리기 ─────────────
 
@@ -194,7 +238,7 @@ class PenPadView(
             }
         }
 
-        if (!everDrew && !mirrorMode) {
+        if (!everDrew && !mirrorMode && !editingArea) {
             canvas.drawText("이 영역 = 노트북 화면", active.centerX(), active.centerY() - 6 * density, hintPaint)
             canvas.drawText("펜으로 그리면 노트북에 그대로 입력돼요", active.centerX(), active.centerY() + 18 * density, hintPaint)
         }
@@ -223,6 +267,18 @@ class PenPadView(
         val c = 8 * density
         canvas.drawLine(closeRect.centerX() - c, closeRect.centerY() - c, closeRect.centerX() + c, closeRect.centerY() + c, closePaint)
         canvas.drawLine(closeRect.centerX() + c, closeRect.centerY() - c, closeRect.centerX() - c, closeRect.centerY() + c, closePaint)
+
+        // 툴바가 없을 때 '영역' 버튼
+        if (showAreaButton && !editingArea) {
+            canvas.drawRoundRect(areaBtnRect, areaBtnRect.height() / 2, areaBtnRect.height() / 2, pillPaint)
+            val q = 8 * density
+            val b = RectF(areaBtnRect.centerX() - q, areaBtnRect.centerY() - q * 0.75f, areaBtnRect.centerX() + q, areaBtnRect.centerY() + q * 0.75f)
+            closePaint.style = Paint.Style.STROKE
+            canvas.drawRoundRect(b, 2 * density, 2 * density, closePaint)
+            closePaint.style = Paint.Style.FILL
+        }
+
+        if (editingArea) drawAreaEditor(canvas)
 
         // 제스처 알림 (예: "실행 취소")
         val flash = flashText
@@ -274,9 +330,14 @@ class PenPadView(
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
+        if (editingArea) { handleAreaEdit(e); return true }
         // 닫기 버튼은 손가락으로도 누를 수 있게
         if (e.actionMasked == MotionEvent.ACTION_DOWN && closeRect.contains(e.x, e.y)) {
             onCloseTap()
+            return true
+        }
+        if (showAreaButton && e.actionMasked == MotionEvent.ACTION_DOWN && areaBtnRect.contains(e.x, e.y)) {
+            startAreaEdit()
             return true
         }
 
@@ -297,23 +358,41 @@ class PenPadView(
         when (action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> if (isThisPointer) {
                 handler.removeCallbacks(goOut)
+                // 영역 밖(손 올려 두는 곳)에서 펜을 대면 뗄 때까지 무시
+                if (farOutside(e.getX(idx), e.getY(idx))) {
+                    penIgnored = true
+                    emitOut()
+                    return true
+                }
+                penIgnored = false
                 requestUnbufferedDispatch(e)   // 입력 지연 최소화
                 everDrew = true
                 emit(Protocol.STATE_CONTACT, e, idx, -1)
             }
             MotionEvent.ACTION_MOVE -> {
+                if (penIgnored) return true
                 handler.removeCallbacks(goOut)
                 for (h in 0 until e.historySize) emit(Protocol.STATE_CONTACT, e, idx, h)
                 emit(Protocol.STATE_CONTACT, e, idx, -1)
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> if (isThisPointer) {
+                if (penIgnored) { penIgnored = false; return true }
                 emit(Protocol.STATE_HOVER, e, idx, -1)
                 // 호버를 지원하지 않는 펜/손가락이면 잠시 뒤 "범위 밖"으로
                 if (!hoverSeen || e.getToolType(idx) == MotionEvent.TOOL_TYPE_FINGER) {
                     handler.postDelayed(goOut, 120)
                 }
             }
-            MotionEvent.ACTION_CANCEL -> emitOut()
+            MotionEvent.ACTION_CANCEL -> {
+                // 안드로이드가 그리던 펜을 취소함 (대개 손바닥이 다른 입력으로 닿았을 때)
+                val wasDrawing = cursorContact && !penIgnored
+                penIgnored = false
+                emitOut()
+                if (wasDrawing) {
+                    flash("펜 입력이 끊겼어요 · 손이 화면에 닿았나요?")
+                    onPenCut?.invoke()
+                }
+            }
         }
         return true
     }
@@ -321,9 +400,15 @@ class PenPadView(
     override fun onHoverEvent(e: MotionEvent): Boolean {
         val t = e.getToolType(0)
         if (t != MotionEvent.TOOL_TYPE_STYLUS && t != MotionEvent.TOOL_TYPE_ERASER) return super.onHoverEvent(e)
+        if (editingArea) return true
         when (e.actionMasked) {
             MotionEvent.ACTION_HOVER_ENTER, MotionEvent.ACTION_HOVER_MOVE -> {
                 hoverSeen = true
+                if (farOutside(e.x, e.y)) {   // 영역 밖 → 노트북에서도 펜이 멀어진 것으로
+                    handler.removeCallbacks(goOut)
+                    emitOut()
+                    return true
+                }
                 penNearUntil = SystemClock.uptimeMillis() + 500
                 handler.removeCallbacks(goOut)
                 for (h in 0 until e.historySize) emit(Protocol.STATE_HOVER, e, 0, h)
@@ -380,7 +465,7 @@ class PenPadView(
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 gActive = true
-                gInvalid = now < penNearUntil
+                gInvalid = now < penNearUntil || !active.contains(e.x, e.y)   // 영역 밖 = 손 올려 두는 곳
                 gMoved = false
                 gMode = 0
                 gStart = now
@@ -388,6 +473,7 @@ class PenPadView(
                 baseline(e)
             }
             MotionEvent.ACTION_POINTER_DOWN -> {
+                if (!active.contains(e.getX(e.actionIndex), e.getY(e.actionIndex))) gInvalid = true
                 gMax = max(gMax, e.pointerCount)
                 baseline(e)
             }
@@ -433,6 +519,148 @@ class PenPadView(
             }
             MotionEvent.ACTION_CANCEL -> gActive = false
         }
+    }
+
+    // ───────────── 그리기 영역 조절 ─────────────
+
+    var editingArea = false
+        private set
+    private var editDrag = 0          // 1 옮기기, 2 크기 조절
+    private var anchorX = 0f          // 크기 조절 중 고정되는 반대쪽 모서리
+    private var anchorY = 0f
+    private var anchorRight = false
+    private var anchorBottom = false
+    private var dragX = 0f
+    private var dragY = 0f
+    private val btnLabels = arrayOf("−", "+", "가운데", "화면 가득", "완료")
+    private val btnRects = Array(btnLabels.size) { RectF() }
+    private val handleFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#A08CFF") }
+    private val handleRing = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE; style = Paint.Style.STROKE; strokeWidth = 2f * density
+    }
+    private val doneFill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#5B45E6") }
+    private val outsideText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#4B5160"); textSize = 13f * density; textAlign = Paint.Align.CENTER
+    }
+
+    /** 조절 화면 열기. 이 동안 펜 입력은 노트북으로 보내지 않음 (연결은 그대로 유지) */
+    fun startAreaEdit() {
+        if (editingArea) return
+        releasePen()
+        editingArea = true
+        editDrag = 0
+        invalidate()
+    }
+
+    fun finishAreaEdit() {
+        if (!editingArea) return
+        editingArea = false
+        editDrag = 0
+        onAreaChanged?.invoke(areaScale, areaX, areaY)
+        flash("그리기 영역 ${(areaScale * 100).roundToInt()}%")
+        invalidate()
+    }
+
+    private fun handleAreaEdit(e: MotionEvent) {
+        val x = e.x
+        val y = e.y
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                editDrag = 0
+                for (i in btnRects.indices) if (btnRects[i].contains(x, y)) { onAreaButton(i); return }
+                val grab = 40 * density
+                val cx = floatArrayOf(active.left, active.right, active.left, active.right)
+                val cy = floatArrayOf(active.top, active.top, active.bottom, active.bottom)
+                for (i in 0 until 4) {
+                    if (hypot(x - cx[i], y - cy[i]) < grab) {
+                        anchorRight = i % 2 == 0      // 왼쪽 모서리를 잡으면 오른쪽이 고정
+                        anchorBottom = i < 2          // 위쪽 모서리를 잡으면 아래쪽이 고정
+                        anchorX = if (anchorRight) active.right else active.left
+                        anchorY = if (anchorBottom) active.bottom else active.top
+                        editDrag = 2
+                        return
+                    }
+                }
+                if (active.contains(x, y)) { editDrag = 1; dragX = x; dragY = y }
+            }
+            MotionEvent.ACTION_MOVE -> when (editDrag) {
+                1 -> {
+                    placeAt(active.left + (x - dragX), active.top + (y - dragY))
+                    dragX = x
+                    dragY = y
+                }
+                2 -> if (fullW > 0f && fullH > 0f) {
+                    val ratio = fullW / fullH
+                    val wNew = max(abs(x - anchorX), abs(y - anchorY) * ratio)
+                    areaScale = (wNew / fullW).coerceIn(MIN_AREA, 1f)
+                    val w = fullW * areaScale
+                    val h = fullH * areaScale
+                    placeAt(if (anchorRight) anchorX - w else anchorX, if (anchorBottom) anchorY - h else anchorY)
+                }
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> editDrag = 0
+        }
+    }
+
+    /** 영역 왼쪽 위를 (left, top)에 두고 화면 안으로 맞춤 */
+    private fun placeAt(left: Float, top: Float) {
+        val freeW = avail.width() - fullW * areaScale
+        val freeH = avail.height() - fullH * areaScale
+        areaX = if (freeW > 1f) ((left - avail.left) / freeW).coerceIn(0f, 1f) else 0.5f
+        areaY = if (freeH > 1f) ((top - avail.top) / freeH).coerceIn(0f, 1f) else 0.5f
+        layoutActive()
+        invalidate()
+    }
+
+    private fun onAreaButton(i: Int) {
+        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        when (i) {
+            0 -> setArea((areaScale * 10 - 1).roundToInt() / 10f, areaX, areaY)
+            1 -> setArea((areaScale * 10 + 1).roundToInt() / 10f, areaX, areaY)
+            2 -> setArea(areaScale, 0.5f, 0.5f)
+            3 -> setArea(1f, 0.5f, 0.5f)
+            4 -> finishAreaEdit()
+        }
+    }
+
+    private fun drawAreaEditor(canvas: Canvas) {
+        val r = 14 * density
+        canvas.drawRoundRect(active, r, r, cornerPaint)
+        val hr = 11 * density
+        for ((hx, hy) in listOf(active.left to active.top, active.right to active.top,
+                                active.left to active.bottom, active.right to active.bottom)) {
+            canvas.drawCircle(hx, hy, hr, handleFill)
+            canvas.drawCircle(hx, hy, hr, handleRing)
+        }
+        canvas.drawText("그리기 영역 ${(areaScale * 100).roundToInt()}%", active.centerX(), active.centerY() - 8 * density, hintPaint)
+        canvas.drawText("가운데를 끌면 이동 · 모서리를 끌면 크기 조절", active.centerX(), active.centerY() + 18 * density, outsideText)
+        if (areaScale < 0.98f) {
+            // 영역 밖 안내 (가장 넓은 빈 곳에)
+            val gaps = listOf(
+                RectF(avail.left, avail.top, active.left, avail.bottom), RectF(active.right, avail.top, avail.right, avail.bottom),
+                RectF(avail.left, avail.top, avail.right, active.top), RectF(avail.left, active.bottom, avail.right, avail.bottom),
+            )
+            val g = gaps.maxByOrNull { it.width() * it.height() }
+            if (g != null && g.width() > 90 * density && g.height() > 40 * density) {
+                canvas.drawText("손 올려 두는 곳", g.centerX(), g.centerY(), outsideText)
+            }
+        }
+
+        // 아래쪽 버튼
+        val bh = 48 * density
+        val gap = 8 * density
+        val widths = btnLabels.map { max(56 * density, textPaint.measureText(it) + 36 * density) }
+        var bx = width / 2f - (widths.sum() + gap * (widths.size - 1)) / 2f
+        val by = height - 24 * density - bh
+        textPaint.textAlign = Paint.Align.CENTER
+        for (i in btnLabels.indices) {
+            val rect = btnRects[i]
+            rect.set(bx, by, bx + widths[i], by + bh)
+            canvas.drawRoundRect(rect, bh / 2, bh / 2, if (i == btnLabels.lastIndex) doneFill else pillPaint)
+            canvas.drawText(btnLabels[i], rect.centerX(), rect.centerY() + 5 * density, textPaint)
+            bx += widths[i] + gap
+        }
+        textPaint.textAlign = Paint.Align.LEFT
     }
 
     /** 화면 아래에 잠깐 문구 표시 */
@@ -494,5 +722,7 @@ class PenPadView(
         private val COLOR_WAIT = Color.parseColor("#D29922")
         private val COLOR_ERR = Color.parseColor("#E5534B")
         private const val FINGER_PRESSURE = 0.7f
+        /** 그리기 영역 최소 크기 (35%) */
+        private const val MIN_AREA = 0.35f
     }
 }

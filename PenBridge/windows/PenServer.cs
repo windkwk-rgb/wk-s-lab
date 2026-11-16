@@ -29,7 +29,7 @@ internal sealed class PenServer : IDisposable
     private readonly PenInjector _injector;
     private readonly object _injectLock = new();
     private readonly object _clientLock = new();
-    private TcpListener? _listener;
+    private volatile TcpListener? _listener;
     private TcpClient? _current;
     private NetworkStream? _currentStream;
     private volatile bool _stopped;
@@ -54,6 +54,9 @@ internal sealed class PenServer : IDisposable
         Streamer = new ScreenStreamer(settings, () => _target);
         UpdateTarget();
     }
+
+    /// <summary>포트를 끝내 열지 못했을 때 (이유)</summary>
+    public event Action<string>? StartFailed;
 
     public int InjectErrors => _injector.ErrorCount;
     public int LastInjectError => _injector.LastError;
@@ -82,11 +85,31 @@ internal sealed class PenServer : IDisposable
         SendToCurrent(Proto.Make(Proto.Config, _aspect));
     }
 
+    /// <summary>
+    /// 포트를 열고 연결을 받기 시작. 업데이트 직후에는 이전 PenBridge가 포트를 늦게 놓을 수 있어서
+    /// 바로 포기하지 않고 20초 동안 다시 시도한다.
+    /// </summary>
     public void Start()
     {
-        _listener = new TcpListener(IPAddress.Any, Proto.Port);
-        _listener.Start();
-        var t = new Thread(AcceptLoop) { IsBackground = true, Name = "PenBridge accept" };
+        var t = new Thread(() =>
+        {
+            Exception? last = null;
+            for (int i = 0; i < 40 && !_stopped; i++)
+            {
+                try
+                {
+                    var l = new TcpListener(IPAddress.Any, Proto.Port);
+                    l.Start();
+                    _listener = l;
+                    last = null;
+                    break;
+                }
+                catch (Exception e) { last = e; Thread.Sleep(500); }
+            }
+            if (_stopped) { try { _listener?.Stop(); } catch { } return; }
+            if (_listener == null) { StartFailed?.Invoke(last?.Message ?? ""); return; }
+            AcceptLoop();
+        }) { IsBackground = true, Name = "PenBridge accept" };
         t.Start();
     }
 

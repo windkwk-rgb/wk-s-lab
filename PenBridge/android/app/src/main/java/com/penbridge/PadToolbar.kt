@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Redo
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.AddCircleOutline
+import androidx.compose.material.icons.rounded.CropFree
 import androidx.compose.material.icons.rounded.FitScreen
 import androidx.compose.material.icons.rounded.PanTool
 import androidx.compose.material.icons.rounded.RemoveCircleOutline
@@ -81,6 +82,7 @@ fun PadToolbar(
     onAction: (id: Int, down: Boolean, label: String) -> Unit,
     onMirror: () -> Unit,
     onCollapse: () -> Unit,
+    onArea: () -> Unit,
 ) {
     if (state.collapsed) {
         Box(
@@ -108,6 +110,7 @@ fun PadToolbar(
     val fit = rememberVectorPainter(Icons.Rounded.FitScreen)
     val save = rememberVectorPainter(Icons.Rounded.Save)
     val screen = rememberVectorPainter(Icons.Rounded.ScreenShare)
+    val area = rememberVectorPainter(Icons.Rounded.CropFree)
     val fold = rememberVectorPainter(
         if (state.right) Icons.AutoMirrored.Rounded.KeyboardArrowRight else Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
     )
@@ -140,6 +143,7 @@ fun PadToolbar(
         Gap()
         ToolButton(save, "저장") { onAction(Protocol.A_SAVE, it, "저장") }
         Spacer(Modifier.height(18.dp))
+        ToolButton(area, "그리기 영역 크기") { if (it) onArea() }
         ToolButton(screen, if (state.mirror) "노트북 화면 끄기" else "노트북 화면 보기", active = state.mirror) {
             if (it) onMirror()
         }
